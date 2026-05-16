@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://d2kcrwo154i6i"]
+
+[ext_resource type="Script" uid="uid://b5qjfgeacg6kb" path="res://player/scripts/player.gd" id="1_oul6g"]
+[ext_resource type="Script" uid="uid://cegmpenhxh81o" path="res://player/weapons/weapon.gd" id="2_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://mywjkld2wd7p" path="res://player/weapons/projectiles/handgun_bullet.tscn" id="3_yw30f"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oul6g"]
+size = Vector2(8, 8)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_rkbax"]
+size = Vector2(8, 8)
+
+[node name="Player" type="CharacterBody2D" unique_id=2041772026]
+script = ExtResource("1_oul6g")
+jump_time_to_peak = 0.32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1630564730]
+shape = SubResource("RectangleShape2D_oul6g")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1388378089]
+texture = SubResource("PlaceholderTexture2D_rkbax")
+
+[node name="Anchor" type="Marker2D" parent="." unique_id=1539687463]
+
+[node name="Weapon" type="Node2D" parent="Anchor" unique_id=464331472]
+script = ExtResource("2_g1dw6")
+projectile_scene = ExtResource("3_yw30f")
+metadata/_custom_type_script = "uid://cegmpenhxh81o"

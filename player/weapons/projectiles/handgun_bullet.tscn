@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://cxo07h2pnyyjc"]
+
+[ext_resource type="PackedScene" uid="uid://mywjkld2wd7p" path="res://player/weapons/projectiles/bullet.tscn" id="1_ttyya"]
+[ext_resource type="Script" uid="uid://d1ysttmwauxn1" path="res://player/weapons/projectiles/scripts/handgun_bullet.gd" id="2_twum3"]
+[ext_resource type="Texture2D" uid="uid://dwy4g5w4b2p5o" path="res://player/weapons/projectiles/projectileAssets/HandgunBullet.png" id="3_twum3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wk2i3"]
+atlas = ExtResource("3_twum3")
+region = Rect2(0, 0, 72, 72)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_twum3"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wk2i3")
+}],
+"loop": false,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_twum3"]
+size = Vector2(8, 6)
+
+[node name="HandgunBullet" unique_id=601357386 instance=ExtResource("1_ttyya")]
+script = ExtResource("2_twum3")
+speed = 400.0
+
+[node name="Sprite2D" parent="." index="0" unique_id=419607699]
+sprite_frames = SubResource("SpriteFrames_twum3")
+autoplay = "default"
+
+[node name="HitBox2D" parent="." index="1" unique_id=717730196]
+collision_mask = 2
+
+[node name="CollisionShape2D" parent="HitBox2D" index="0" unique_id=313389699]
+shape = SubResource("RectangleShape2D_twum3")

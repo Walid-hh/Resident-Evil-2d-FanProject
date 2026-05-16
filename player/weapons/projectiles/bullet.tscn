@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://mywjkld2wd7p"]
+
+[ext_resource type="Script" uid="uid://dm3klpc1868ef" path="res://player/weapons/projectiles/scripts/projectile.gd" id="1_yexv3"]
+[ext_resource type="Script" uid="uid://cr1xl5pi6s37u" path="res://common/hit_box.gd" id="2_r4kjk"]
+
+[node name="Bullet" type="Node2D" unique_id=601357386]
+z_index = 2
+script = ExtResource("1_yexv3")
+
+[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=419607699]
+unique_name_in_owner = true
+texture_filter = 1
+
+[node name="HitBox2D" type="Area2D" parent="." unique_id=717730196]
+unique_name_in_owner = true
+script = ExtResource("2_r4kjk")
+metadata/_custom_type_script = "uid://cr1xl5pi6s37u"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox2D" unique_id=313389699]
+debug_color = Color(1, 0, 0, 0.41960785)

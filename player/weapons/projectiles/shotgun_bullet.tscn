@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://btv8qf5m2onv3"]
+
+[ext_resource type="PackedScene" uid="uid://mywjkld2wd7p" path="res://player/weapons/projectiles/bullet.tscn" id="1_1k3el"]
+[ext_resource type="Script" uid="uid://c0x672cewve55" path="res://player/weapons/projectiles/scripts/shotgun_bullet.gd" id="2_8agot"]
+[ext_resource type="Texture2D" uid="uid://x5hbu5k5xyo8" path="res://player/weapons/projectiles/projectileAssets/ShotgunBullet-Sheet.png" id="2_frtod"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8agot"]
+atlas = ExtResource("2_frtod")
+region = Rect2(0, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2rhfe"]
+atlas = ExtResource("2_frtod")
+region = Rect2(74, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_08oj1"]
+atlas = ExtResource("2_frtod")
+region = Rect2(148, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qjlqk"]
+atlas = ExtResource("2_frtod")
+region = Rect2(222, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l8u7l"]
+atlas = ExtResource("2_frtod")
+region = Rect2(296, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_72gly"]
+atlas = ExtResource("2_frtod")
+region = Rect2(370, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gl3q0"]
+atlas = ExtResource("2_frtod")
+region = Rect2(444, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ydgwb"]
+atlas = ExtResource("2_frtod")
+region = Rect2(518, 0, 74, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xaajy"]
+atlas = ExtResource("2_frtod")
+region = Rect2(592, 0, 74, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lliju"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8agot")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2rhfe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_08oj1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qjlqk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l8u7l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_72gly")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gl3q0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ydgwb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xaajy")
+}],
+"loop": false,
+"name": &"default",
+"speed": 20.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8agot"]
+size = Vector2(73, 38)
+
+[node name="ShotgunBullet" unique_id=601357386 instance=ExtResource("1_1k3el")]
+script = ExtResource("2_8agot")
+speed = 100.0
+
+[node name="Sprite2D" parent="." index="0" unique_id=419607699]
+position = Vector2(32, 0)
+sprite_frames = SubResource("SpriteFrames_lliju")
+autoplay = "default"
+frame = 8
+frame_progress = 1.0
+
+[node name="HitBox2D" parent="." index="1" unique_id=717730196]
+position = Vector2(32, 0)
+
+[node name="CollisionShape2D" parent="HitBox2D" index="0" unique_id=313389699]
+shape = SubResource("RectangleShape2D_8agot")

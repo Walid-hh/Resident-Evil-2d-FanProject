@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cwahbir37mai4"]
+
+[ext_resource type="Script" uid="uid://cqcyq2n8ynkib" path="res://common/health_component.gd" id="1_4p76k"]
+[ext_resource type="Script" uid="uid://dv26viptqxcvo" path="res://common/hurt_box.gd" id="2_j1c1k"]
+
+[node name="Enemy" type="CharacterBody2D" unique_id=230910072]
+
+[node name="StateDebugLabel" type="Label" parent="." unique_id=886942218]
+unique_name_in_owner = true
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=455128843]
+unique_name_in_owner = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1428837338]
+
+[node name="ActivationArea" type="Area2D" parent="." unique_id=1037891176]
+unique_name_in_owner = true
+
+[node name="AttackArea" type="Area2D" parent="." unique_id=1875008282]
+unique_name_in_owner = true
+
+[node name="HealthComponent" type="Node2D" parent="." unique_id=2042380706 node_paths=PackedStringArray("hurt_box")]
+script = ExtResource("1_4p76k")
+hurt_box = NodePath("../HurtBox2D")
+metadata/_custom_type_script = "uid://cqcyq2n8ynkib"
+
+[node name="HurtBox2D" type="Area2D" parent="." unique_id=1155624927]
+collision_layer = 2
+script = ExtResource("2_j1c1k")
+hurtbox_type = 2
+metadata/_custom_type_script = "uid://dv26viptqxcvo"
+
+[node name="WaitTimer" type="Timer" parent="." unique_id=942717471]
