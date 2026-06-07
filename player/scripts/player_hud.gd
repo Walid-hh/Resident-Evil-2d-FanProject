@@ -20,8 +20,7 @@ var shotgun_ui_focus := preload("uid://c1nircco8xit0")
 var shotgun_ui_no_focus := preload("uid://cbgcri1yxkska")
 
 func _ready() -> void:
-	pass # Replace with function body.
-
+	set_unlocked_weapon_visible.call_deferred()
 
 func _physics_process(delta: float) -> void:
 	if player.get_weapon_in_use().is_in_group("handgun"):
@@ -56,3 +55,11 @@ func set_shotgun_no_focus() -> void:
 	shotgun_canvas.texture = gun_texture_no_focus
 	shotgun_ui.texture = shotgun_ui_no_focus
 	sg_focus_indicator.visible = false
+
+func set_unlocked_weapon_visible() -> void:
+	print(player.get_weapons_unlocked())
+	for weapon in player.get_weapons_unlocked():
+		if weapon.is_in_group("handgun"):
+			handgun_canvas.visible = true
+		if weapon.is_in_group("shotgun"):
+			shotgun_canvas.visible = true

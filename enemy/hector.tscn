@@ -113,7 +113,7 @@ animations = [{
 size = Vector2(22, 28)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_df6yt"]
-size = Vector2(320, 180)
+size = Vector2(320, 106)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vuq4f"]
 size = Vector2(29, 46)
@@ -180,6 +180,9 @@ collision_mask = 2
 script = ExtResource("2_vuq4f")
 max_speed = 50.0
 
+[node name="StateDebugLabel" parent="." index="0" unique_id=886942218]
+visible = false
+
 [node name="AnimatedSprite2D" parent="." index="1" unique_id=455128843]
 sprite_frames = SubResource("SpriteFrames_jpuaw")
 animation = &"run"
@@ -188,17 +191,12 @@ autoplay = "idle"
 [node name="CollisionShape2D" parent="." index="2" unique_id=1428837338]
 shape = SubResource("RectangleShape2D_w8idt")
 
-[node name="ActivationArea" parent="." index="3" unique_id=1037891176]
-visible = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationArea" index="0" unique_id=2144300125]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationArea" parent_id_path=PackedInt32Array(1037891176) index="0" unique_id=2144300125]
+position = Vector2(0, -37)
 shape = SubResource("RectangleShape2D_df6yt")
 debug_color = Color(0.6784314, 0.5058824, 0, 0.41960785)
 
-[node name="AttackArea" parent="." index="4" unique_id=1875008282]
-visible = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" index="0" unique_id=144753990]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" parent_id_path=PackedInt32Array(1875008282) index="0" unique_id=144753990]
 position = Vector2(1.5, -6)
 shape = SubResource("RectangleShape2D_vuq4f")
 debug_color = Color(1, 0, 0, 0.41960785)

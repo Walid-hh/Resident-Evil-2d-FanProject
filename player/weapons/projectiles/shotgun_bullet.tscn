@@ -80,6 +80,7 @@ size = Vector2(73, 38)
 
 [node name="ShotgunBullet" unique_id=601357386 instance=ExtResource("1_1k3el")]
 script = ExtResource("2_8agot")
+damage = 5
 speed = 100.0
 
 [node name="Sprite2D" parent="." index="0" unique_id=419607699]

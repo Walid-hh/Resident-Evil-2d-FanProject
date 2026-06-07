@@ -24,7 +24,6 @@
 [ext_resource type="Script" uid="uid://op55hl76bybx" path="res://player/weapons/handgun.gd" id="23_knn7v"]
 [ext_resource type="Texture2D" uid="uid://b2rjqtqnge8kh" path="res://player/playerAssets/ArmsSgCrouch.png" id="23_q28gw"]
 [ext_resource type="PackedScene" uid="uid://cxo07h2pnyyjc" path="res://player/weapons/projectiles/handgun_bullet.tscn" id="24_7pqkx"]
-[ext_resource type="Script" uid="uid://2vkq117h386x" path="res://player/camera/camera_extended.gd" id="24_g4c7l"]
 [ext_resource type="Texture2D" uid="uid://cv7mmg6mdmgeq" path="res://player/playerAssets/SgFireCrouch-Sheet.png" id="24_ge24q"]
 [ext_resource type="Script" uid="uid://cqcyq2n8ynkib" path="res://common/health_component.gd" id="25_knn7v"]
 [ext_resource type="Texture2D" uid="uid://cw8sqv5nrdpce" path="res://player/playerAssets/ArmsSgDiagonalUp.png" id="25_pnw6m"]
@@ -374,7 +373,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"body_run",
-"speed": 10.0
+"speed": 12.0
 }]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mmwog"]
@@ -885,7 +884,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oul6g"]
-size = Vector2(14, 28)
+size = Vector2(14, 22)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uw77l"]
 size = Vector2(22, 28)
@@ -914,6 +913,7 @@ anti_aliasing = false
 z_index = 1
 script = ExtResource("1_oul6g")
 jump_time_to_peak = 0.32
+max_fall_speed = 300.0
 
 [node name="StateDebugLabel" type="Label" parent="." unique_id=493470895]
 unique_name_in_owner = true
@@ -931,24 +931,22 @@ offset_top = -64.0
 offset_right = 24.0
 offset_bottom = -41.0
 
-[node name="Camera" type="Camera2D" parent="." unique_id=292591951 node_paths=PackedStringArray("player")]
-top_level = true
+[node name="Camera" type="Camera2D" parent="." unique_id=292591951]
+position = Vector2(0, -56)
 position_smoothing_speed = 20.0
-script = ExtResource("24_g4c7l")
-player = NodePath("..")
 
 [node name="Legs" type="AnimatedSprite2D" parent="." unique_id=1495406380]
 unique_name_in_owner = true
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_rgyib")
-animation = &"legs_idle"
+animation = &"legs_jump"
 autoplay = "legs_idle"
 
 [node name="Body" type="AnimatedSprite2D" parent="." unique_id=231889741]
 unique_name_in_owner = true
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_2ieo8")
-animation = &"body_fall"
+animation = &"body_run"
 autoplay = "body_idle"
 
 [node name="Head" type="AnimatedSprite2D" parent="." unique_id=259204004]
@@ -962,10 +960,11 @@ autoplay = "head_idle"
 unique_name_in_owner = true
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_art4l")
-animation = &"arms_hg_diagonal_up_fire"
+animation = &"arms_hg_crouch_fire"
 autoplay = "arms_hg_idle"
 
 [node name="CollisionBox" type="CollisionShape2D" parent="." unique_id=1630564730]
+position = Vector2(0, 3)
 shape = SubResource("RectangleShape2D_oul6g")
 
 [node name="Anchor" type="Marker2D" parent="." unique_id=1539687463]
@@ -1034,6 +1033,7 @@ theme_override_constants/margin_left = 10
 
 [node name="HandgunCanvas" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer" unique_id=142217900]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 texture = ExtResource("38_art4l")
 
@@ -1053,6 +1053,7 @@ texture = ExtResource("39_a2xo5")
 
 [node name="ShotgunCanvas" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer" unique_id=1399779835]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 texture = ExtResource("37_pnw6m")
 
@@ -1076,7 +1077,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = -16
-theme_override_constants/margin_right = 50
+theme_override_constants/margin_right = 89
 
 [node name="HealthBar" type="ProgressBar" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer2" unique_id=353804047]
 unique_name_in_owner = true

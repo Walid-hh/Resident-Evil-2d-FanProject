@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://d2boih0baohgh"]
+
+[ext_resource type="PackedScene" uid="uid://mywjkld2wd7p" path="res://player/weapons/projectiles/bullet.tscn" id="1_f1sab"]
+[ext_resource type="Script" uid="uid://dl1qyclvu2oty" path="res://player/weapons/projectiles/scripts/sniper_bullet.gd" id="2_kx6sx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kx6sx"]
+size = Vector2(340, 20)
+
+[node name="SniperBullet" unique_id=601357386 instance=ExtResource("1_f1sab")]
+script = ExtResource("2_kx6sx")
+
+[node name="CollisionShape2D" parent="HitBox2D" parent_id_path=PackedInt32Array(717730196) index="0" unique_id=313389699]
+position = Vector2(150, 0)
+shape = SubResource("RectangleShape2D_kx6sx")

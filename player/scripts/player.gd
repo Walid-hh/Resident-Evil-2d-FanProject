@@ -4,6 +4,7 @@ class_name Player extends CharacterBody2D
 @export var acceleration := 1400.0
 @export var deceleration := 2100.0
 @export var max_speed    := 120.0
+@export var fall_deceleration := 1000
 
 @export_category("Jump")
 @export var jump_height := 50.0
@@ -65,12 +66,12 @@ const animation_names : Array = [
 ]
 var current_animation : String
 const ANIMATIONS: Dictionary = {
-	"idle":        {"legs": "legs_idle", "body": "body_idle", "head": "head_idle" },
-	"run":         {"legs": "legs_run", "body": "body_run", "head": "head_idle"  },
-	"jump":        { "legs": "legs_jump", "body": "body_jump" },
-	"fall":        { "legs": "legs_fall", "body": "body_fall" },
-	"aim":         { "legs": "legs_idle", "body": "body_aim", "head": "head_idle" },
-	"crouch":      { "legs": "legs_crouch", "body": "body_crouch", "head": "head_crouch" },
+	"idle":{ "body": "body_idle", "legs": "legs_idle", "head": "head_idle" },
+	"run":{ "body": "body_run", "legs": "legs_run",  "head": "head_idle"  },
+	"jump":{ "body": "body_jump" , "legs": "legs_jump" },
+	"fall":{  "body": "body_fall", "legs": "legs_fall" },
+	"aim":{ "body": "body_aim", "legs": "legs_idle", "head": "head_idle" },
+	"crouch":{ "body": "body_crouch", "legs": "legs_crouch",  "head": "head_crouch" },
 }
 # ── Flags ─────────────────────────────────────────────────────────────────────
 var is_moving := false
@@ -163,6 +164,9 @@ func _process_fall(delta: float) -> void:
 	if direction_x != 0:
 		velocity.x = clampf(velocity.x + air_acceleration * direction_x * delta, -jump_horizontal_speed, jump_horizontal_speed)
 		_set_facing(direction_x)
+	else :
+		velocity.x = move_toward(velocity.x, 0.0, fall_deceleration * delta)
+		
 
 	if Input.is_action_just_pressed("jump"):
 		jump_buffer.start()
@@ -236,6 +240,9 @@ func _unlock_weapons() -> void:
 	for weapon : Weapon in anchor.get_children():
 		if weapon.get_is_weapon_unlocked():
 			weapons_unlocked.append(weapon)
+		else :
+			weapon.set_physics_process(false)
+		
 
 func _process_weapon_in_use() -> void:
 	for weapon in weapons_unlocked:
@@ -351,19 +358,16 @@ func _set_facing(dir: float) -> void:
 
 func _get_snapped_direction() -> Vector2:
 	var raw := Input.get_vector("left", "right", "up", "down")
+	var allowed := ALLOWED_AIM_DIRECTIONS.duplicate()
 	if raw.length() < 0.2:
 		return Vector2.ZERO
 	if current_state != State.JUMP and raw == Vector2.DOWN:
 		return Vector2.ZERO
-	var allowed := ALLOWED_AIM_DIRECTIONS.duplicate()
-	if current_state == State.JUMP or current_state == State.FALL :
-		allowed.append(Vector2(0, 1))
 	elif current_state == State.CROUCH:
 		if arms.flip_h:
 			return Vector2(-1, 0)
 		else:
 			return Vector2(1, 0)
-
 	var best_dir := Vector2.ZERO
 	var best_dot := -INF
 	for dir in allowed:
@@ -389,3 +393,6 @@ func calculate_jump_horizontal_speed(distance: float, time_to_peak: float, time_
 # ── Var Exposers ──────────────────────────────────────────────────────────────
 func get_weapon_in_use() -> Weapon:
 	return weapon_in_use
+
+func get_weapons_unlocked() -> Array[Weapon]:
+	return weapons_unlocked

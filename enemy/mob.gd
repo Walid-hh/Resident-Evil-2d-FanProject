@@ -17,11 +17,11 @@ enum State {INACTIVE, RUN, ATTACK, DIE, WAIT}
 var current_state_name := "INACTIVE"
 var current_state := State.INACTIVE
 
-
 # ── Flags ─────────────────────────────────────────────────────────────────────
 @export var jump_height := 50.0
 @export_range(0.1, 1.5) var jump_time_to_descent := 0.2
 @onready var fall_gravity := calculate_fall_gravity(jump_height, jump_time_to_descent)
+
 # ── Helper Vars ───────────────────────────────────────────────────────────────
 var player : Player
 var direction_to_player : float
@@ -31,18 +31,18 @@ func _ready() -> void:
 	_find_player()
 	activation_area.monitoring = true
 	attack_area.monitoring = false
-	activation_area.body_entered.connect(
-		func(body_that_entered) -> void:
-			if body_that_entered == player :
-				_transition_to_state(State.RUN)
-)
-	attack_area.body_entered.connect(func(body_that_entered) -> void:
-			if body_that_entered == player :
-				_transition_to_state(State.ATTACK)
-				)
-	attack_enabler.animation_finished.connect(func(anim) -> void :
-		_transition_to_state(State.WAIT)
-		)
+	#activation_area.body_entered.connect(
+		#func(body_that_entered) -> void:
+			#if body_that_entered == player :
+				#_transition_to_state(State.RUN)
+#)
+	#attack_area.body_entered.connect(func(body_that_entered) -> void:
+			#if body_that_entered == player :
+				#_transition_to_state(State.ATTACK)
+				#)
+	#attack_enabler.animation_finished.connect(func(anim) -> void :
+		#_transition_to_state(State.WAIT)
+		#)
 	wait_timer.timeout.connect(func() -> void:
 		_transition_to_state(State.INACTIVE)
 		)
@@ -50,11 +50,8 @@ func _ready() -> void:
 		_transition_to_state(State.INACTIVE)
 		)
 
-
-
 # ── Main loop ─────────────────────────────────────────────────────────────────
 func _physics_process(delta: float) -> void:
-	print(attack.monitoring , "   ", attack.monitorable)
 	state_debug_label.text = current_state_name
 	direction_to_player = global_position.direction_to(player.global_position).x
 	_set_facing(direction_to_player)
