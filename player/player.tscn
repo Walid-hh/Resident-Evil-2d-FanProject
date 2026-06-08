@@ -21,20 +21,17 @@
 [ext_resource type="Texture2D" uid="uid://dxw56jfqlevqi" path="res://player/playerAssets/HgFireRight-Sheet.png" id="17_s7qer"]
 [ext_resource type="Texture2D" uid="uid://c5yyfi52v517" path="res://player/playerAssets/HgFireUp-Sheet.png" id="18_bjvpn"]
 [ext_resource type="Texture2D" uid="uid://cg34u2j3khgcg" path="res://player/playerAssets/ArmsHgRight.png" id="19_knn7v"]
-[ext_resource type="Script" uid="uid://op55hl76bybx" path="res://player/weapons/handgun.gd" id="23_knn7v"]
+[ext_resource type="PackedScene" uid="uid://wqny7e4n05ty" path="res://player/weapons/weapon.tscn" id="23_knn7v"]
 [ext_resource type="Texture2D" uid="uid://b2rjqtqnge8kh" path="res://player/playerAssets/ArmsSgCrouch.png" id="23_q28gw"]
-[ext_resource type="PackedScene" uid="uid://cxo07h2pnyyjc" path="res://player/weapons/projectiles/handgun_bullet.tscn" id="24_7pqkx"]
 [ext_resource type="Texture2D" uid="uid://cv7mmg6mdmgeq" path="res://player/playerAssets/SgFireCrouch-Sheet.png" id="24_ge24q"]
 [ext_resource type="Script" uid="uid://cqcyq2n8ynkib" path="res://common/health_component.gd" id="25_knn7v"]
 [ext_resource type="Texture2D" uid="uid://cw8sqv5nrdpce" path="res://player/playerAssets/ArmsSgDiagonalUp.png" id="25_pnw6m"]
-[ext_resource type="Script" uid="uid://b33ryh4lm3fho" path="res://player/weapons/shotgun.gd" id="25_uw77l"]
 [ext_resource type="Texture2D" uid="uid://sffw68c02gbm" path="res://player/playerAssets/SgFireDiagonalUp-Sheet.png" id="26_1so5t"]
 [ext_resource type="Script" uid="uid://dv26viptqxcvo" path="res://common/hurt_box.gd" id="26_7pqkx"]
 [ext_resource type="Texture2D" uid="uid://d0llumhg5uuk0" path="res://player/playerAssets/ArmsSgRight.png" id="27_55jnj"]
 [ext_resource type="Texture2D" uid="uid://cmq3e0xru88io" path="res://player/playerAssets/SgFireRight-Sheet.png" id="28_dx5ib"]
 [ext_resource type="Texture2D" uid="uid://cee360lt3vhk4" path="res://player/playerAssets/ArmsSgUp.png" id="29_a2xo5"]
 [ext_resource type="Texture2D" uid="uid://28xncvv0cb2m" path="res://player/playerAssets/SgFireUp-Sheet.png" id="30_art4l"]
-[ext_resource type="PackedScene" uid="uid://btv8qf5m2onv3" path="res://player/weapons/projectiles/shotgun_bullet.tscn" id="34_ge24q"]
 [ext_resource type="Script" uid="uid://cinqaofj7550f" path="res://player/scripts/player_hud.gd" id="37_a2xo5"]
 [ext_resource type="Texture2D" uid="uid://dohgkvavumgpc" path="res://player/playerAssets/playerHUD/GunTextureNoFocus.png" id="37_pnw6m"]
 [ext_resource type="Texture2D" uid="uid://dwuy63ae3hj1w" path="res://player/playerAssets/playerHUD/HandgunUINoFocus.png" id="38_55jnj"]
@@ -45,6 +42,8 @@
 [ext_resource type="Script" uid="uid://de00t4naltaj8" path="res://player/scripts/aim_controller.gd" id="41_aim"]
 [ext_resource type="Script" uid="uid://07shku5lux7p" path="res://player/scripts/weapon_inventory.gd" id="42_inventory"]
 [ext_resource type="Script" uid="uid://f55nwghjga0n" path="res://player/scripts/player_animator.gd" id="43_animator"]
+[ext_resource type="Resource" path="res://player/weapons/configs/handgun_weapon_config.tres" id="44_handgun_config"]
+[ext_resource type="Resource" path="res://player/weapons/configs/shotgun_weapon_config.tres" id="45_shotgun_config"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r7pn3"]
 atlas = ExtResource("2_e7oew")
@@ -929,10 +928,12 @@ anchor = NodePath("../Anchor")
 unique_name_in_owner = true
 script = ExtResource("41_aim")
 
-[node name="WeaponInventory" type="Node" parent="." unique_id=1100262113 node_paths=PackedStringArray("anchor")]
+[node name="WeaponInventory" type="Node" parent="." unique_id=1100262113 node_paths=PackedStringArray("anchor", "weapon")]
 unique_name_in_owner = true
 script = ExtResource("42_inventory")
 anchor = NodePath("../Anchor")
+weapon = NodePath("../Anchor/Weapon")
+weapon_configs = Array[Resource]([ExtResource("44_handgun_config"), ExtResource("45_shotgun_config")])
 
 [node name="PlayerAnimator" type="Node" parent="." unique_id=1100262114 node_paths=PackedStringArray("legs", "arms", "body", "head")]
 unique_name_in_owner = true
@@ -998,21 +999,10 @@ shape = SubResource("RectangleShape2D_oul6g")
 unique_name_in_owner = true
 position = Vector2(0, -8)
 
-[node name="Handgun" type="Node2D" parent="Anchor" unique_id=56799206]
+[node name="Weapon" parent="Anchor" unique_id=56799206 instance=ExtResource("23_knn7v")]
 unique_name_in_owner = true
 position = Vector2(16, 0)
-script = ExtResource("23_knn7v")
-projectile_scene = ExtResource("24_7pqkx")
-fire_rate = 0.133
-metadata/_custom_type_script = "uid://op55hl76bybx"
-
-[node name="Shotgun" type="Node2D" parent="Anchor" unique_id=467719899]
-unique_name_in_owner = true
-position = Vector2(16, 0)
-script = ExtResource("25_uw77l")
-projectile_scene = ExtResource("34_ge24q")
-fire_rate = 0.75
-metadata/_custom_type_script = "uid://b33ryh4lm3fho"
+config = ExtResource("44_handgun_config")
 
 [node name="HealthComponent" type="Node2D" parent="." unique_id=1617273315 node_paths=PackedStringArray("hurt_box")]
 script = ExtResource("25_knn7v")

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponConfig" format=3 uid="uid://cshbo77h5lyrh"]
+
+[ext_resource type="Script" uid="uid://dwwq0g5qrxtnd" path="res://player/weapons/weapon_config.gd" id="1_shotgun_config_script"]
+[ext_resource type="PackedScene" uid="uid://btv8qf5m2onv3" path="res://player/weapons/projectiles/shotgun_bullet.tscn" id="2_shotgun_projectile"]
+[ext_resource type="Texture2D" uid="uid://c1nircco8xit0" path="res://player/playerAssets/playerHUD/ShotgunUI.png" id="3_shotgun_hud"]
+
+[resource]
+script = ExtResource("1_shotgun_config_script")
+weapon_key = &"shotgun"
+projectile_scene = ExtResource("2_shotgun_projectile")
+fire_rate = 0.75
+hud_ui_texture = ExtResource("3_shotgun_hud")
+unlocked_by_default = true

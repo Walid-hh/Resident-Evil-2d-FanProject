@@ -1,34 +1,22 @@
 class_name Weapon extends Node2D
 
 @onready var anchor: Marker2D
-@export var projectile_scene : PackedScene
-@export var fire_rate : float = 1.0
-var is_weapon_unlocked := false
-var fire_timer : float
+@export var config: WeaponConfig
 
 func _ready() -> void:
 	add_to_group("weapons")
-	anchor = get_parent()
-	fire_timer = fire_rate
-
-
-func tick_cooldown(delta: float) -> void:
-	fire_timer += delta
-
-
-func can_fire() -> bool:
-	return fire_timer >= fire_rate
+	anchor = get_parent() as Marker2D
 
 
 func fire(direction: Vector2) -> void:
-	if !can_fire():
+	var projectile_scene := get_projectile_scene()
+	if projectile_scene == null:
 		return
 
-	_shoot(direction)
-	fire_timer = 0.0
+	_shoot(WeaponFireMath.apply_spread(direction, get_spread_degrees()), projectile_scene)
 
 
-func _shoot(direction: Vector2) -> void:
+func _shoot(direction: Vector2, projectile_scene: PackedScene) -> void:
 	var projectile := projectile_scene.instantiate()
 	projectile.direction = direction
 	projectile.global_transform = global_transform
@@ -36,7 +24,25 @@ func _shoot(direction: Vector2) -> void:
 
 
 func get_weapon_key() -> StringName:
-	return &"weapon"
+	if config == null or config.weapon_key == &"":
+		return &"weapon"
 
-func get_is_weapon_unlocked() -> bool :
-	return is_weapon_unlocked
+	return config.weapon_key
+
+
+func get_weapon_config() -> WeaponConfig:
+	return config
+
+
+func get_projectile_scene() -> PackedScene:
+	if config == null:
+		return null
+
+	return config.projectile_scene
+
+
+func get_spread_degrees() -> float:
+	if config == null:
+		return 0.0
+
+	return config.spread_degrees

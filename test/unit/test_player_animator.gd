@@ -3,12 +3,16 @@ extends GutTest
 class TestWeapon:
 	extends Weapon
 	var weapon_key: StringName = &"handgun"
+	var weapon_config: WeaponConfig
 
 	func _ready() -> void:
 		pass
 
 	func get_weapon_key() -> StringName:
 		return weapon_key
+
+	func get_weapon_config() -> WeaponConfig:
+		return weapon_config
 
 
 var _texture: Texture2D
@@ -78,8 +82,8 @@ func before_each() -> void:
 
 func test_fall_legs_animation_is_not_restarted_while_still_falling() -> void:
 	_animator.physics_update("fall", PlayerMotor.State.FALL, _weapon, Vector2.ZERO)
-	_legs.frame = 1
 	_legs.stop()
+	_legs.frame = 1
 
 	_animator.physics_update("fall", PlayerMotor.State.FALL, _weapon, Vector2.ZERO)
 
@@ -118,7 +122,7 @@ func test_attack_can_start_again_after_animation_finished() -> void:
 
 
 func test_shotgun_ready_and_fire_paths_use_shotgun_prefix() -> void:
-	_weapon = add_child_autofree(_make_weapon(&"shotgun"))
+	_weapon = add_child_autofree(_make_weapon(&"shotgun", _make_config(&"shotgun")))
 
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
 	assert_eq(_arms.animation, &"arms_sg_right", "Shotgun ready state should use shotgun arm art.")
@@ -126,6 +130,14 @@ func test_shotgun_ready_and_fire_paths_use_shotgun_prefix() -> void:
 	_animator.start_attack(Vector2.RIGHT)
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
 	assert_eq(_arms.animation, &"arms_sg_right_fire", "Shotgun firing should use shotgun fire art.")
+
+
+func test_weapon_config_key_takes_priority_over_weapon_key() -> void:
+	_weapon = add_child_autofree(_make_weapon(&"handgun", _make_config(&"shotgun")))
+
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+
+	assert_eq(_arms.animation, &"arms_sg_right", "Weapon config key should select the animation profile.")
 
 
 func test_crouch_precedence_changes_between_ready_and_fire_paths() -> void:
@@ -152,7 +164,7 @@ func test_aim_direction_routes_to_the_expected_ready_animations() -> void:
 
 
 func test_unknown_weapon_falls_back_to_handgun_animations() -> void:
-	_weapon = add_child_autofree(_make_weapon(&"laser"))
+	_weapon = add_child_autofree(_make_weapon(&"laser", _make_config(&"laser")))
 
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
 
@@ -169,8 +181,8 @@ func test_unknown_aim_falls_back_to_idle_or_right_ready_poses() -> void:
 
 func test_repeated_ready_updates_do_not_restart_stable_arm_animation() -> void:
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
-	_arms.frame = 1
 	_arms.stop()
+	_arms.frame = 1
 
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
 
@@ -192,10 +204,17 @@ func _make_sprite(animation_names: Array) -> AnimatedSprite2D:
 	return sprite
 
 
-func _make_weapon(weapon_key: StringName) -> Weapon:
+func _make_weapon(weapon_key: StringName, weapon_config: WeaponConfig = null) -> Weapon:
 	var weapon := TestWeapon.new()
 	weapon.weapon_key = weapon_key
+	weapon.weapon_config = weapon_config
 	return weapon
+
+
+func _make_config(weapon_key: StringName) -> WeaponConfig:
+	var config := WeaponConfig.new()
+	config.weapon_key = weapon_key
+	return config
 
 
 func _make_texture() -> Texture2D:

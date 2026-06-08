@@ -11,12 +11,11 @@ const ANIMATIONS: Dictionary = {
 	"crouch": { "body": "body_crouch", "legs": "legs_crouch", "head": "head_crouch" },
 }
 
-const ARM_ANIMATION_PREFIXES: Dictionary = {
+const DEFAULT_ARM_PREFIX := &"arms_hg"
+const ARM_PREFIX_BY_WEAPON_KEY: Dictionary = {
 	&"handgun": &"arms_hg",
 	&"shotgun": &"arms_sg",
 }
-
-const DEFAULT_WEAPON_KEY := &"handgun"
 
 const AIM_DIRECTION_TOKENS: Dictionary = {
 	Vector2.RIGHT: &"right",
@@ -117,9 +116,18 @@ func _get_arm_animation_name(weapon: Weapon, direction_token: StringName, is_fir
 
 func _get_arm_animation_prefix(weapon: Weapon) -> StringName:
 	if weapon == null:
-		return ARM_ANIMATION_PREFIXES[DEFAULT_WEAPON_KEY]
+		return DEFAULT_ARM_PREFIX
 
-	return ARM_ANIMATION_PREFIXES.get(weapon.get_weapon_key(), ARM_ANIMATION_PREFIXES[DEFAULT_WEAPON_KEY])
+	var weapon_key := _get_weapon_key(weapon)
+	return ARM_PREFIX_BY_WEAPON_KEY.get(weapon_key, DEFAULT_ARM_PREFIX)
+
+
+func _get_weapon_key(weapon: Weapon) -> StringName:
+	var weapon_config := weapon.get_weapon_config()
+	if weapon_config != null and weapon_config.weapon_key != &"":
+		return weapon_config.weapon_key
+
+	return weapon.get_weapon_key()
 
 
 func _get_ready_direction_token(aim_direction: Vector2, player_state: int) -> StringName:

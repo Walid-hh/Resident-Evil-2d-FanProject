@@ -1,81 +1,100 @@
 class_name WeaponInventory extends Node
 
 @export var anchor: Marker2D
+@export var weapon: Weapon
+@export var weapon_configs: Array[WeaponConfig] = []
 
-var weapons_unlocked: Array[Weapon] = []
-var weapon_in_use: Weapon
+var unlocked_weapon_configs: Array[WeaponConfig] = []
+var active_weapon_config: WeaponConfig
+var _active_weapon_index := -1
+var _cooldowns: Dictionary = {}
 
 
 func initialize() -> void:
-	_unlock_weapons()
+	_unlock_weapon_configs()
+	_select_weapon_index(0)
 
 
 func physics_update(delta: float, fire_pressed: bool, aim_direction: Vector2, fallback_direction: float) -> void:
-	_process_weapon_in_use(delta)
-	var fire_direction := get_fire_direction(aim_direction, fallback_direction)
+	_process_active_cooldown(delta)
+	var fire_direction := WeaponFireMath.get_fire_direction(aim_direction, fallback_direction)
 
-	if anchor != null:
-		anchor.global_rotation = fire_direction.angle()
+	WeaponFireMath.apply_anchor_rotation(anchor, fire_direction)
 
-	if fire_pressed and weapon_in_use != null and weapon_in_use.can_fire():
-		weapon_in_use.fire(fire_direction)
-
-
-func get_fire_direction(aim_direction: Vector2, fallback_direction: float) -> Vector2:
-	var fire_direction := aim_direction.normalized()
-	if fire_direction == Vector2.ZERO:
-		fire_direction.x = fallback_direction
-	return fire_direction
+	if fire_pressed and weapon != null and active_weapon_config != null and _can_active_weapon_fire():
+		weapon.fire(fire_direction)
+		_cooldowns[_get_config_key(active_weapon_config)] = 0.0
 
 
 func cycle_next_unlocked_weapon() -> void:
-	if weapons_unlocked.is_empty() or weapon_in_use == null:
+	if unlocked_weapon_configs.is_empty():
 		return
 
-	var index := weapons_unlocked.find(weapon_in_use)
-	var next_index := (index + 1) % weapons_unlocked.size()
-	weapon_in_use = weapons_unlocked[next_index]
+	_select_weapon_index((_active_weapon_index + 1) % unlocked_weapon_configs.size())
 
 
 func cycle_previous_unlocked_weapon() -> void:
-	if weapons_unlocked.is_empty() or weapon_in_use == null:
+	if unlocked_weapon_configs.is_empty():
 		return
 
-	var index := weapons_unlocked.find(weapon_in_use)
-	var previous_index := (index - 1) % weapons_unlocked.size()
-	weapon_in_use = weapons_unlocked[previous_index]
+	_select_weapon_index((_active_weapon_index - 1) % unlocked_weapon_configs.size())
 
 
 func get_weapon_in_use() -> Weapon:
-	return weapon_in_use
+	return weapon
 
 
-func get_weapons_unlocked() -> Array[Weapon]:
-	return weapons_unlocked
+func get_active_weapon_config() -> WeaponConfig:
+	return active_weapon_config
 
 
-func _unlock_weapons() -> void:
-	weapons_unlocked.clear()
-	weapon_in_use = null
-	if anchor == null:
-		return
+func get_unlocked_weapon_configs() -> Array[WeaponConfig]:
+	return unlocked_weapon_configs
 
-	for child: Node in anchor.get_children():
-		var weapon := child as Weapon
-		if weapon == null:
+
+func _unlock_weapon_configs() -> void:
+	unlocked_weapon_configs.clear()
+	active_weapon_config = null
+	_active_weapon_index = -1
+	_cooldowns.clear()
+
+	for config: WeaponConfig in weapon_configs:
+		if config == null or !config.unlocked_by_default:
 			continue
 
-		if weapon.get_is_weapon_unlocked():
-			weapons_unlocked.append(weapon)
-			if weapon_in_use == null:
-				weapon_in_use = weapon
-		else:
-			weapon.set_physics_process(false)
+		unlocked_weapon_configs.append(config)
+		_cooldowns[_get_config_key(config)] = config.fire_rate
 
 
-func _process_weapon_in_use(delta: float) -> void:
-	for weapon: Weapon in weapons_unlocked:
-		var is_active := weapon == weapon_in_use
-		weapon.set_physics_process(is_active)
-		if is_active:
-			weapon.tick_cooldown(delta)
+func _select_weapon_index(index: int) -> void:
+	if unlocked_weapon_configs.is_empty() or weapon == null:
+		return
+
+	_active_weapon_index = posmod(index, unlocked_weapon_configs.size())
+	active_weapon_config = unlocked_weapon_configs[_active_weapon_index]
+	weapon.config = active_weapon_config
+
+
+func _process_active_cooldown(delta: float) -> void:
+	if active_weapon_config == null:
+		return
+
+	var key := _get_config_key(active_weapon_config)
+	_cooldowns[key] = float(_cooldowns.get(key, active_weapon_config.fire_rate)) + delta
+
+
+func _can_active_weapon_fire() -> bool:
+	if active_weapon_config == null:
+		return false
+	if active_weapon_config.projectile_scene == null:
+		return false
+
+	var key := _get_config_key(active_weapon_config)
+	return float(_cooldowns.get(key, active_weapon_config.fire_rate)) >= active_weapon_config.fire_rate
+
+
+func _get_config_key(config: WeaponConfig) -> StringName:
+	if config == null or config.weapon_key == &"":
+		return &"weapon"
+
+	return config.weapon_key

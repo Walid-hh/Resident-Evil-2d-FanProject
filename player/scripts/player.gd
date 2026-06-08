@@ -80,5 +80,9 @@ func get_weapon_in_use() -> Weapon:
 	return weapon_inventory.get_weapon_in_use()
 
 
-func get_weapons_unlocked() -> Array[Weapon]:
-	return weapon_inventory.get_weapons_unlocked()
+func get_active_weapon_config() -> WeaponConfig:
+	return weapon_inventory.get_active_weapon_config()
+
+
+func get_unlocked_weapon_configs() -> Array[WeaponConfig]:
+	return weapon_inventory.get_unlocked_weapon_configs()

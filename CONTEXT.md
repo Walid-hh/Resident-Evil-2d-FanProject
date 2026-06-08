@@ -29,11 +29,11 @@ The current concrete enemy type used in the test level.
 _Code_: `enemy/hector.tscn`
 
 **Weapon**:
-A player-owned firing tool mounted under the player's anchor. A weapon can be unlocked, selected, and responsible for spawning a projectile scene.
+A player-owned firing tool mounted under the player's anchor. The player uses one generic weapon node whose active `WeaponConfig` determines the current weapon identity, projectile, HUD art, fire rate, and spread.
 _Code_: `player/weapons/weapon.gd`
 
 **Unlocked Weapon**:
-A weapon available for player cycling and firing. Locked weapons are ignored by the current weapon processor.
+A weapon config available for player cycling and firing. Locked configs are ignored by the current weapon inventory.
 
 **Handgun**:
 An integrated current weapon. It fires a handgun projectile and is represented in the HUD.
@@ -75,10 +75,10 @@ The player is a `CharacterBody2D` with explicit movement states: ground, jump, f
 Player ownership is split across:
 - `PlayerMotor`: movement state, gravity, coyote timer, jump buffer, velocity changes, and crouch anchor offsets.
 - `AimController`: horizontal input, snapped aim direction, facing, and compatibility writes to `Global.player_aim_direction` and `Global.player_last_direction`.
-- `WeaponInventory`: unlocked weapon discovery from the player's anchor, active weapon cycling, active weapon processing, anchor rotation, and shared fire cooldown flow.
+- `WeaponInventory`: exported weapon config inventory, unlocked config filtering, active config cycling, single weapon-node assignment, anchor rotation, and per-weapon-key cooldown flow.
 - `PlayerAnimator`: legs, body, head, and arms animation routing, including attack animation state and weapon-specific arm animations. It avoids restarting unchanged non-attack animations every frame, while attack animation restarts remain explicit.
 
-Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from weapon-specific prefixes and shared direction tokens, with handgun as the fallback profile. HUD-facing player getters still delegate to the weapon inventory so the HUD can read the active and unlocked weapons without owning weapon state.
+Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from `WeaponConfig.weapon_key` profiles and shared direction tokens, with handgun as the fallback profile. HUD-facing player getters still delegate to the weapon inventory so the HUD can read the active and unlocked weapon configs without owning weapon state.
 
 Important file: `player/scripts/player.gd`
 
@@ -90,16 +90,18 @@ Pressing fire starts the player's attack animation state and lets the active wea
 
 ### Weapons And Projectiles
 
-Weapons live under the player's `Anchor` marker. At startup, `WeaponInventory` gathers unlocked weapons from that anchor and disables processing for weapons that are not currently selected.
+One generic weapon node lives under the player's `Anchor` marker. At startup, `WeaponInventory` filters exported `WeaponConfig` resources to the unlocked configs, assigns the first unlocked config to the weapon node, and cycles by swapping that node's active config.
 
-The current integrated weapons are handgun and shotgun. Both inherit from `Weapon`; the shared base owns cooldown timing and projectile spawning, while `WeaponInventory` supplies the current fire direction and rotates the anchor.
+The current integrated weapons are handgun and shotgun. Both use standalone config resources for projectile scene, fire rate, spread, HUD texture, and canonical weapon key. `WeaponInventory` supplies the current fire direction, rotates the anchor, and tracks cooldowns per weapon key so cycling does not reset a weapon's cooldown.
 
 Projectiles inherit from the shared projectile script, move along their direction, and destroy themselves on range, timer, animation completion, or hit depending on the concrete projectile.
 
 Important files:
 - `player/weapons/weapon.gd`
-- `player/weapons/handgun.gd`
-- `player/weapons/shotgun.gd`
+- `player/weapons/weapon_config.gd`
+- `player/weapons/configs/handgun_weapon_config.tres`
+- `player/weapons/configs/shotgun_weapon_config.tres`
+- `player/weapons/weapon_fire_math.gd`
 - `player/scripts/weapon_inventory.gd`
 - `player/weapons/projectiles/scripts/projectile.gd`
 
@@ -136,7 +138,7 @@ Important files:
 
 ### HUD
 
-The player HUD shows weapon focus state and player health. The HUD currently supports handgun and shotgun weapon slots. It reads the player's current weapon and unlocked weapon list instead of maintaining an independent weapon model.
+The player HUD shows weapon focus state and player health. The HUD currently supports handgun and shotgun weapon slots. It reads the player's active and unlocked weapon configs instead of maintaining an independent weapon model, and sources slot art from weapon config resources.
 
 Important file: `player/scripts/player_hud.gd`
 
@@ -179,6 +181,6 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 
 - Prefer the canonical terms in this document when naming new design concepts or writing documentation.
 - Keep code changes aligned with the current scene ownership: player behavior in `player/`, enemy behavior in `enemy/`, and shared combat primitives in `common/`.
-- When adding a weapon, wire it through the player anchor, unlock flow, projectile scene, animation handling, and HUD representation.
+- When adding a weapon, create a weapon config resource, add it to the player's weapon inventory config list, provide projectile and HUD assets, and add animation profile handling if the weapon needs a new arm animation set.
 - When adding an enemy, use "Enemy" in documentation and player-facing language, even if it inherits from the current `Mob` class.
 - When changing damage behavior, verify hit box and hurt box flags together; mismatched flags make overlaps look broken even when collision shapes are correct.
