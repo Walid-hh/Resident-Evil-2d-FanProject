@@ -2,12 +2,13 @@ extends GutTest
 
 class TestWeapon:
 	extends Weapon
+	var weapon_key: StringName = &"handgun"
 
 	func _ready() -> void:
 		pass
 
 	func get_weapon_key() -> StringName:
-		return &"handgun"
+		return weapon_key
 
 
 var _texture: Texture2D
@@ -54,8 +55,19 @@ func before_each() -> void:
 		"arms_hg_up_fire",
 		"arms_hg_down_fire",
 		"arms_hg_crouch_fire",
+		"arms_sg_idle",
+		"arms_sg_right",
+		"arms_sg_diagonal_up",
+		"arms_sg_up",
+		"arms_sg_down",
+		"arms_sg_crouch",
+		"arms_sg_right_fire",
+		"arms_sg_diagonal_up_fire",
+		"arms_sg_up_fire",
+		"arms_sg_down_fire",
+		"arms_sg_crouch_fire",
 	]))
-	_weapon = add_child_autofree(TestWeapon.new())
+	_weapon = add_child_autofree(_make_weapon(&"handgun"))
 
 	_animator = add_child_autofree(PlayerAnimator.new())
 	_animator.legs = _legs
@@ -85,7 +97,7 @@ func test_fall_can_change_to_idle_animation() -> void:
 	assert_eq(_body.animation, &"body_idle", "Changing animation keys should still start the new body animation.")
 
 
-func test_attack_animation_uses_forced_fire_path() -> void:
+func test_handgun_attack_animation_uses_forced_fire_path() -> void:
 	_animator.start_attack(Vector2.RIGHT)
 
 	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
@@ -105,6 +117,68 @@ func test_attack_can_start_again_after_animation_finished() -> void:
 	assert_eq(_arms.animation, &"arms_hg_up_fire", "A later attack should be able to start a new fire animation.")
 
 
+func test_shotgun_ready_and_fire_paths_use_shotgun_prefix() -> void:
+	_weapon = add_child_autofree(_make_weapon(&"shotgun"))
+
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+	assert_eq(_arms.animation, &"arms_sg_right", "Shotgun ready state should use shotgun arm art.")
+
+	_animator.start_attack(Vector2.RIGHT)
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+	assert_eq(_arms.animation, &"arms_sg_right_fire", "Shotgun firing should use shotgun fire art.")
+
+
+func test_crouch_precedence_changes_between_ready_and_fire_paths() -> void:
+	_animator.physics_update("crouch", PlayerMotor.State.CROUCH, _weapon, Vector2.RIGHT)
+	assert_eq(_arms.animation, &"arms_hg_crouch", "Crouch without firing should use the crouch pose.")
+
+	_animator.start_attack(Vector2.RIGHT)
+	_animator.physics_update("crouch", PlayerMotor.State.CROUCH, _weapon, Vector2.RIGHT)
+	assert_eq(_arms.animation, &"arms_hg_crouch_fire", "Crouch while firing should use the crouch fire pose.")
+
+
+func test_aim_direction_routes_to_the_expected_ready_animations() -> void:
+	_animator.physics_update("aim", PlayerMotor.State.AIM, _weapon, Vector2.RIGHT)
+	assert_eq(_arms.animation, &"arms_hg_right", "Right aim should use the right ready pose.")
+
+	_animator.physics_update("aim", PlayerMotor.State.AIM, _weapon, Vector2(1, -0.8))
+	assert_eq(_arms.animation, &"arms_hg_diagonal_up", "Diagonal up aim should use the diagonal ready pose.")
+
+	_animator.physics_update("aim", PlayerMotor.State.AIM, _weapon, Vector2.UP)
+	assert_eq(_arms.animation, &"arms_hg_up", "Up aim should use the up ready pose.")
+
+	_animator.physics_update("aim", PlayerMotor.State.AIM, _weapon, Vector2.DOWN)
+	assert_eq(_arms.animation, &"arms_hg_down", "Down aim should use the down ready pose.")
+
+
+func test_unknown_weapon_falls_back_to_handgun_animations() -> void:
+	_weapon = add_child_autofree(_make_weapon(&"laser"))
+
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+
+	assert_eq(_arms.animation, &"arms_hg_right", "Unknown weapons should fall back to the handgun prefix.")
+
+
+func test_unknown_aim_falls_back_to_idle_or_right_ready_poses() -> void:
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2(0.5, 0.5))
+	assert_eq(_arms.animation, &"arms_hg_idle", "Unknown aim should fall back to idle when not in aim state.")
+
+	_animator.physics_update("aim", PlayerMotor.State.AIM, _weapon, Vector2(0.5, 0.5))
+	assert_eq(_arms.animation, &"arms_hg_right", "Unknown aim should fall back to right when in aim state.")
+
+
+func test_repeated_ready_updates_do_not_restart_stable_arm_animation() -> void:
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+	_arms.frame = 1
+	_arms.stop()
+
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+
+	assert_eq(_arms.animation, &"arms_hg_right", "Repeated ready updates should keep the same arm animation.")
+	assert_eq(_arms.frame, 1, "Repeated ready updates should not restart the arm animation.")
+	assert_false(_arms.is_playing(), "Repeated ready updates should not resume a stopped arm animation.")
+
+
 func _make_sprite(animation_names: Array) -> AnimatedSprite2D:
 	var frames := SpriteFrames.new()
 	for animation_name: String in animation_names:
@@ -116,6 +190,12 @@ func _make_sprite(animation_names: Array) -> AnimatedSprite2D:
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	return sprite
+
+
+func _make_weapon(weapon_key: StringName) -> Weapon:
+	var weapon := TestWeapon.new()
+	weapon.weapon_key = weapon_key
+	return weapon
 
 
 func _make_texture() -> Texture2D:

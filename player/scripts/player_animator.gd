@@ -11,33 +11,20 @@ const ANIMATIONS: Dictionary = {
 	"crouch": { "body": "body_crouch", "legs": "legs_crouch", "head": "head_crouch" },
 }
 
-const ARM_ANIMATIONS: Dictionary = {
-	&"handgun": {
-		"idle": "arms_hg_idle",
-		"right": "arms_hg_right",
-		"diagonal_up": "arms_hg_diagonal_up",
-		"up": "arms_hg_up",
-		"down": "arms_hg_down",
-		"crouch": "arms_hg_crouch",
-		"fire_right": "arms_hg_right_fire",
-		"fire_diagonal_up": "arms_hg_diagonal_up_fire",
-		"fire_up": "arms_hg_up_fire",
-		"fire_down": "arms_hg_down_fire",
-		"fire_crouch": "arms_hg_crouch_fire",
-	},
-	&"shotgun": {
-		"idle": "arms_sg_idle",
-		"right": "arms_sg_right",
-		"diagonal_up": "arms_sg_diagonal_up",
-		"up": "arms_sg_up",
-		"down": "arms_sg_down",
-		"crouch": "arms_sg_crouch",
-		"fire_right": "arms_sg_right_fire",
-		"fire_diagonal_up": "arms_sg_diagonal_up_fire",
-		"fire_up": "arms_sg_up_fire",
-		"fire_down": "arms_sg_down_fire",
-		"fire_crouch": "arms_sg_crouch_fire",
-	},
+const ARM_ANIMATION_PREFIXES: Dictionary = {
+	&"handgun": &"arms_hg",
+	&"shotgun": &"arms_sg",
+}
+
+const DEFAULT_WEAPON_KEY := &"handgun"
+
+const AIM_DIRECTION_TOKENS: Dictionary = {
+	Vector2.RIGHT: &"right",
+	Vector2.LEFT: &"right",
+	Vector2(1, -0.8): &"diagonal_up",
+	Vector2(-1, -0.8): &"diagonal_up",
+	Vector2.UP: &"up",
+	Vector2.DOWN: &"down",
 }
 
 @export var legs: AnimatedSprite2D
@@ -100,18 +87,17 @@ func _update_arm_animation(player_state: int, weapon: Weapon, aim_direction: Vec
 	if arms == null or weapon == null or !_is_firing_animation_finished:
 		return
 
-	var weapon_anims: Dictionary = ARM_ANIMATIONS.get(weapon.get_weapon_key(), ARM_ANIMATIONS[&"handgun"])
 	var is_crouching := player_state == PlayerMotor.State.CROUCH
 	if is_crouching and !_is_firing:
-		_play_if_changed(arms, weapon_anims["crouch"])
+		_play_if_changed(arms, _get_arm_animation_name(weapon, &"crouch", false))
 	elif is_crouching and _is_firing:
-		arms.play(weapon_anims["fire_crouch"])
+		arms.play(_get_arm_animation_name(weapon, &"crouch", true))
 		_is_firing_animation_finished = false
 	elif _is_firing:
-		arms.play(_get_fire_animation_name(weapon_anims, aim_direction))
+		arms.play(_get_arm_animation_name(weapon, _get_aim_direction_token(aim_direction), true))
 		_is_firing_animation_finished = false
 	else:
-		_play_if_changed(arms, _get_ready_animation_name(weapon_anims, aim_direction, player_state))
+		_play_if_changed(arms, _get_arm_animation_name(weapon, _get_ready_direction_token(aim_direction, player_state), false))
 
 
 func _play_if_changed(sprite: AnimatedSprite2D, animation_name: StringName) -> void:
@@ -121,34 +107,32 @@ func _play_if_changed(sprite: AnimatedSprite2D, animation_name: StringName) -> v
 	sprite.play(animation_name)
 
 
-func _get_ready_animation_name(weapon_anims: Dictionary, aim_direction: Vector2, player_state: int) -> String:
-	match aim_direction:
-		Vector2.RIGHT, Vector2.LEFT:
-			return weapon_anims["right"]
-		Vector2(1, -0.8), Vector2(-1, -0.8):
-			return weapon_anims["diagonal_up"]
-		Vector2.UP:
-			return weapon_anims["up"]
-		Vector2.DOWN:
-			return weapon_anims["down"]
-		_:
-			if player_state != PlayerMotor.State.AIM:
-				return weapon_anims["idle"]
-			return weapon_anims["right"]
+func _get_arm_animation_name(weapon: Weapon, direction_token: StringName, is_firing: bool) -> StringName:
+	var prefix := _get_arm_animation_prefix(weapon)
+	var animation_name := "%s_%s" % [prefix, direction_token]
+	if is_firing:
+		animation_name += "_fire"
+	return StringName(animation_name)
 
 
-func _get_fire_animation_name(weapon_anims: Dictionary, aim_direction: Vector2) -> String:
-	match aim_direction:
-		Vector2.RIGHT, Vector2.LEFT:
-			return weapon_anims["fire_right"]
-		Vector2(1, -0.8), Vector2(-1, -0.8):
-			return weapon_anims["fire_diagonal_up"]
-		Vector2.UP:
-			return weapon_anims["fire_up"]
-		Vector2.DOWN:
-			return weapon_anims["fire_down"]
-		_:
-			return weapon_anims["fire_right"]
+func _get_arm_animation_prefix(weapon: Weapon) -> StringName:
+	if weapon == null:
+		return ARM_ANIMATION_PREFIXES[DEFAULT_WEAPON_KEY]
+
+	return ARM_ANIMATION_PREFIXES.get(weapon.get_weapon_key(), ARM_ANIMATION_PREFIXES[DEFAULT_WEAPON_KEY])
+
+
+func _get_ready_direction_token(aim_direction: Vector2, player_state: int) -> StringName:
+	if AIM_DIRECTION_TOKENS.has(aim_direction):
+		return AIM_DIRECTION_TOKENS[aim_direction]
+
+	if player_state != PlayerMotor.State.AIM:
+		return &"idle"
+	return &"right"
+
+
+func _get_aim_direction_token(aim_direction: Vector2) -> StringName:
+	return AIM_DIRECTION_TOKENS.get(aim_direction, &"right")
 
 
 func _on_arms_animation_finished() -> void:

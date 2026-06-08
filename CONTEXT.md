@@ -78,7 +78,7 @@ Player ownership is split across:
 - `WeaponInventory`: unlocked weapon discovery from the player's anchor, active weapon cycling, active weapon processing, anchor rotation, and shared fire cooldown flow.
 - `PlayerAnimator`: legs, body, head, and arms animation routing, including attack animation state and weapon-specific arm animations. It avoids restarting unchanged non-attack animations every frame, while attack animation restarts remain explicit.
 
-Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. HUD-facing player getters still delegate to the weapon inventory so the HUD can read the active and unlocked weapons without owning weapon state.
+Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from weapon-specific prefixes and shared direction tokens, with handgun as the fallback profile. HUD-facing player getters still delegate to the weapon inventory so the HUD can read the active and unlocked weapons without owning weapon state.
 
 Important file: `player/scripts/player.gd`
 
