@@ -41,6 +41,10 @@
 [ext_resource type="Texture2D" uid="uid://binn02ettnoyj" path="res://player/playerAssets/playerHUD/GunTextureFocus.png" id="38_art4l"]
 [ext_resource type="Texture2D" uid="uid://c4784wl774y6q" path="res://player/playerAssets/playerHUD/GunUIFocusIndicator.png" id="39_a2xo5"]
 [ext_resource type="Texture2D" uid="uid://cbgcri1yxkska" path="res://player/playerAssets/playerHUD/ShotgunUINoFocus.png" id="39_dx5ib"]
+[ext_resource type="Script" uid="uid://v3xajq4w14jm" path="res://player/scripts/player_motor.gd" id="40_motor"]
+[ext_resource type="Script" uid="uid://de00t4naltaj8" path="res://player/scripts/aim_controller.gd" id="41_aim"]
+[ext_resource type="Script" uid="uid://07shku5lux7p" path="res://player/scripts/weapon_inventory.gd" id="42_inventory"]
+[ext_resource type="Script" uid="uid://f55nwghjga0n" path="res://player/scripts/player_animator.gd" id="43_animator"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r7pn3"]
 atlas = ExtResource("2_e7oew")
@@ -912,8 +916,31 @@ anti_aliasing = false
 [node name="Player" type="CharacterBody2D" unique_id=2041772026 groups=["player"]]
 z_index = 1
 script = ExtResource("1_oul6g")
+
+[node name="PlayerMotor" type="Node" parent="." unique_id=1100262111 node_paths=PackedStringArray("anchor")]
+unique_name_in_owner = true
+script = ExtResource("40_motor")
+jump_height = 70.0
 jump_time_to_peak = 0.32
 max_fall_speed = 300.0
+anchor = NodePath("../Anchor")
+
+[node name="AimController" type="Node" parent="." unique_id=1100262112]
+unique_name_in_owner = true
+script = ExtResource("41_aim")
+
+[node name="WeaponInventory" type="Node" parent="." unique_id=1100262113 node_paths=PackedStringArray("anchor")]
+unique_name_in_owner = true
+script = ExtResource("42_inventory")
+anchor = NodePath("../Anchor")
+
+[node name="PlayerAnimator" type="Node" parent="." unique_id=1100262114 node_paths=PackedStringArray("legs", "arms", "body", "head")]
+unique_name_in_owner = true
+script = ExtResource("43_animator")
+legs = NodePath("../Legs")
+arms = NodePath("../Arms")
+body = NodePath("../Body")
+head = NodePath("../Head")
 
 [node name="StateDebugLabel" type="Label" parent="." unique_id=493470895]
 unique_name_in_owner = true
@@ -975,16 +1002,16 @@ position = Vector2(0, -8)
 unique_name_in_owner = true
 position = Vector2(16, 0)
 script = ExtResource("23_knn7v")
-fire_rate = 0.133
 projectile_scene = ExtResource("24_7pqkx")
+fire_rate = 0.133
 metadata/_custom_type_script = "uid://op55hl76bybx"
 
 [node name="Shotgun" type="Node2D" parent="Anchor" unique_id=467719899]
 unique_name_in_owner = true
 position = Vector2(16, 0)
 script = ExtResource("25_uw77l")
-fire_rate = 0.75
 projectile_scene = ExtResource("34_ge24q")
+fire_rate = 0.75
 metadata/_custom_type_script = "uid://b33ryh4lm3fho"
 
 [node name="HealthComponent" type="Node2D" parent="." unique_id=1617273315 node_paths=PackedStringArray("hurt_box")]
