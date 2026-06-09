@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dwwq0g5qrxtnd" path="res://player/weapons/weapon_config.gd" id="1_shotgun_config_script"]
 [ext_resource type="PackedScene" uid="uid://btv8qf5m2onv3" path="res://player/weapons/projectiles/shotgun_bullet.tscn" id="2_shotgun_projectile"]
 [ext_resource type="Texture2D" uid="uid://c1nircco8xit0" path="res://player/playerAssets/playerHUD/ShotgunUI.png" id="3_shotgun_hud"]
+[ext_resource type="Texture2D" uid="uid://cbgcri1yxkska" path="res://player/playerAssets/playerHUD/ShotgunUINoFocus.png" id="4_shotgun_hud_no_focus"]
 
 [resource]
 script = ExtResource("1_shotgun_config_script")
@@ -10,4 +11,5 @@ weapon_key = &"shotgun"
 projectile_scene = ExtResource("2_shotgun_projectile")
 fire_rate = 0.75
 hud_ui_texture = ExtResource("3_shotgun_hud")
+hud_ui_no_focus_texture = ExtResource("4_shotgun_hud_no_focus")
 unlocked_by_default = true

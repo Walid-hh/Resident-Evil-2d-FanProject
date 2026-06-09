@@ -38,6 +38,20 @@ func test_initialize_selects_first_unlocked_config() -> void:
 	assert_eq(_weapon.get_weapon_config(), first)
 
 
+func test_initialize_emits_weapon_state_signals() -> void:
+	var first := _make_config(&"handgun", true)
+	var second := _make_config(&"shotgun", true)
+	watch_signals(_inventory)
+	_inventory.weapon_configs = [first, second]
+
+	_inventory.initialize()
+
+	assert_signal_emit_count(_inventory, "unlocked_weapon_configs_changed", 1)
+	assert_signal_emitted_with_parameters(_inventory, "unlocked_weapon_configs_changed", [[first, second]])
+	assert_signal_emit_count(_inventory, "active_weapon_config_changed", 1)
+	assert_signal_emitted_with_parameters(_inventory, "active_weapon_config_changed", [first])
+
+
 func test_initialize_ignores_locked_configs() -> void:
 	var locked := _make_config(&"locked", false)
 	var unlocked := _make_config(&"handgun", true)
@@ -65,6 +79,19 @@ func test_cycle_next_and_previous_wraps_active_config() -> void:
 
 	_inventory.cycle_previous_unlocked_weapon()
 	assert_eq(_inventory.get_active_weapon_config(), second)
+
+
+func test_cycle_emits_active_weapon_config_changed() -> void:
+	var first := _make_config(&"handgun", true)
+	var second := _make_config(&"shotgun", true)
+	watch_signals(_inventory)
+	_inventory.weapon_configs = [first, second]
+	_inventory.initialize()
+
+	_inventory.cycle_next_unlocked_weapon()
+
+	assert_signal_emit_count(_inventory, "active_weapon_config_changed", 2)
+	assert_signal_emitted_with_parameters(_inventory, "active_weapon_config_changed", [second])
 
 
 func test_physics_update_fires_only_active_config() -> void:

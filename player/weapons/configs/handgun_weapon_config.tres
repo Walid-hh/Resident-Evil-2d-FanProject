@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dwwq0g5qrxtnd" path="res://player/weapons/weapon_config.gd" id="1_handgun_config_script"]
 [ext_resource type="PackedScene" uid="uid://cxo07h2pnyyjc" path="res://player/weapons/projectiles/handgun_bullet.tscn" id="2_handgun_projectile"]
 [ext_resource type="Texture2D" uid="uid://dpnc3tlt85hsg" path="res://player/playerAssets/playerHUD/HandgunUI.png" id="3_handgun_hud"]
+[ext_resource type="Texture2D" uid="uid://dwuy63ae3hj1w" path="res://player/playerAssets/playerHUD/HandgunUINoFocus.png" id="4_handgun_hud_no_focus"]
 
 [resource]
 script = ExtResource("1_handgun_config_script")
@@ -10,4 +11,5 @@ weapon_key = &"handgun"
 projectile_scene = ExtResource("2_handgun_projectile")
 fire_rate = 0.133
 hud_ui_texture = ExtResource("3_handgun_hud")
+hud_ui_no_focus_texture = ExtResource("4_handgun_hud_no_focus")
 unlocked_by_default = true

@@ -11,11 +11,18 @@ class_name Player extends CharacterBody2D
 @onready var aim_controller: AimController = %AimController
 @onready var weapon_inventory: WeaponInventory = %WeaponInventory
 @onready var player_animator: PlayerAnimator = %PlayerAnimator
+@onready var health_component: HealthComponent = $HealthComponent
+@onready var player_hud: PlayerHUD = $PlayerHUD/HUD
 
 
 func _ready() -> void:
+	weapon_inventory.unlocked_weapon_configs_changed.connect(player_hud.set_weapon_slots)
+	weapon_inventory.active_weapon_config_changed.connect(player_hud.set_active_weapon_config)
+	health_component.health_changed.connect(player_hud.set_health_values)
 	weapon_inventory.initialize()
 	player_animator.attack_animation_finished.connect(_on_attack_animation_finished)
+	health_component.died.connect(_on_died)
+	player_hud.set_health_values(health_component.health, health_component.max_health)
 
 
 func _physics_process(delta: float) -> void:
@@ -69,6 +76,11 @@ func _physics_process(delta: float) -> void:
 
 func _on_attack_animation_finished() -> void:
 	motor.retry_crouch_exit(Input.is_action_pressed("down"), !player_animator.is_firing())
+
+
+func _on_died(_source: Variant) -> void:
+	Global.player_died.emit()
+	queue_free()
 
 
 func _update_debug_labels() -> void:

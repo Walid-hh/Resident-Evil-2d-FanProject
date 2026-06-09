@@ -1,5 +1,8 @@
 class_name WeaponInventory extends Node
 
+signal unlocked_weapon_configs_changed(unlocked_weapon_configs: Array[WeaponConfig])
+signal active_weapon_config_changed(active_weapon_config: WeaponConfig)
+
 @export var anchor: Marker2D
 @export var weapon: Weapon
 @export var weapon_configs: Array[WeaponConfig] = []
@@ -13,6 +16,8 @@ var _cooldowns: Dictionary = {}
 func initialize() -> void:
 	_unlock_weapon_configs()
 	_select_weapon_index(0)
+	unlocked_weapon_configs_changed.emit(unlocked_weapon_configs.duplicate())
+	active_weapon_config_changed.emit(active_weapon_config)
 
 
 func physics_update(delta: float, fire_pressed: bool, aim_direction: Vector2, fallback_direction: float) -> void:
@@ -31,6 +36,7 @@ func cycle_next_unlocked_weapon() -> void:
 		return
 
 	_select_weapon_index((_active_weapon_index + 1) % unlocked_weapon_configs.size())
+	active_weapon_config_changed.emit(active_weapon_config)
 
 
 func cycle_previous_unlocked_weapon() -> void:
@@ -38,6 +44,7 @@ func cycle_previous_unlocked_weapon() -> void:
 		return
 
 	_select_weapon_index((_active_weapon_index - 1) % unlocked_weapon_configs.size())
+	active_weapon_config_changed.emit(active_weapon_config)
 
 
 func get_weapon_in_use() -> Weapon:
@@ -67,12 +74,17 @@ func _unlock_weapon_configs() -> void:
 
 
 func _select_weapon_index(index: int) -> void:
-	if unlocked_weapon_configs.is_empty() or weapon == null:
+	if unlocked_weapon_configs.is_empty():
+		active_weapon_config = null
+		_active_weapon_index = -1
+		if weapon != null:
+			weapon.config = null
 		return
 
 	_active_weapon_index = posmod(index, unlocked_weapon_configs.size())
 	active_weapon_config = unlocked_weapon_configs[_active_weapon_index]
-	weapon.config = active_weapon_config
+	if weapon != null:
+		weapon.config = active_weapon_config
 
 
 func _process_active_cooldown(delta: float) -> void:

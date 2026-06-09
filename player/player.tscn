@@ -33,11 +33,6 @@
 [ext_resource type="Texture2D" uid="uid://cee360lt3vhk4" path="res://player/playerAssets/ArmsSgUp.png" id="29_a2xo5"]
 [ext_resource type="Texture2D" uid="uid://28xncvv0cb2m" path="res://player/playerAssets/SgFireUp-Sheet.png" id="30_art4l"]
 [ext_resource type="Script" uid="uid://cinqaofj7550f" path="res://player/scripts/player_hud.gd" id="37_a2xo5"]
-[ext_resource type="Texture2D" uid="uid://dohgkvavumgpc" path="res://player/playerAssets/playerHUD/GunTextureNoFocus.png" id="37_pnw6m"]
-[ext_resource type="Texture2D" uid="uid://dwuy63ae3hj1w" path="res://player/playerAssets/playerHUD/HandgunUINoFocus.png" id="38_55jnj"]
-[ext_resource type="Texture2D" uid="uid://binn02ettnoyj" path="res://player/playerAssets/playerHUD/GunTextureFocus.png" id="38_art4l"]
-[ext_resource type="Texture2D" uid="uid://c4784wl774y6q" path="res://player/playerAssets/playerHUD/GunUIFocusIndicator.png" id="39_a2xo5"]
-[ext_resource type="Texture2D" uid="uid://cbgcri1yxkska" path="res://player/playerAssets/playerHUD/ShotgunUINoFocus.png" id="39_dx5ib"]
 [ext_resource type="Script" uid="uid://v3xajq4w14jm" path="res://player/scripts/player_motor.gd" id="40_motor"]
 [ext_resource type="Script" uid="uid://de00t4naltaj8" path="res://player/scripts/aim_controller.gd" id="41_aim"]
 [ext_resource type="Script" uid="uid://07shku5lux7p" path="res://player/scripts/weapon_inventory.gd" id="42_inventory"]
@@ -1021,7 +1016,7 @@ debug_color = Color(0.17254902, 0.62352943, 0, 0.41960785)
 
 [node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=2071344923]
 
-[node name="HUD" type="Control" parent="PlayerHUD" unique_id=279385839 node_paths=PackedStringArray("player")]
+[node name="HUD" type="Control" parent="PlayerHUD" unique_id=279385839]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -1029,7 +1024,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("37_a2xo5")
-player = NodePath("../..")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PlayerHUD/HUD" unique_id=1287832998]
 layout_mode = 0
@@ -1048,46 +1042,10 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_constants/margin_left = 10
 
-[node name="HandgunCanvas" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer" unique_id=142217900]
+[node name="WeaponSlotsContainer" type="HBoxContainer" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
-texture = ExtResource("38_art4l")
-
-[node name="HandgunUI" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer/HandgunCanvas" unique_id=1815738151]
-unique_name_in_owner = true
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 20.0
-texture = ExtResource("38_55jnj")
-
-[node name="HgFocusIndicator" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer/HandgunCanvas" unique_id=933113474]
-unique_name_in_owner = true
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 20.0
-texture = ExtResource("39_a2xo5")
-
-[node name="ShotgunCanvas" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer" unique_id=1399779835]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-texture = ExtResource("37_pnw6m")
-
-[node name="ShotgunUI" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer/ShotgunCanvas" unique_id=389364403]
-unique_name_in_owner = true
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 20.0
-texture = ExtResource("39_dx5ib")
-
-[node name="SgFocusIndicator" type="TextureRect" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer/ShotgunCanvas" unique_id=1721531475]
-unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 20.0
-texture = ExtResource("39_a2xo5")
+theme_override_constants/separation = 10
 
 [node name="MarginContainer2" type="MarginContainer" parent="PlayerHUD/HUD/VBoxContainer" unique_id=1956972693]
 layout_mode = 2

@@ -29,7 +29,7 @@ The current concrete enemy type used in the test level.
 _Code_: `enemy/hector.tscn`
 
 **Weapon**:
-A player-owned firing tool mounted under the player's anchor. The player uses one generic weapon node whose active `WeaponConfig` determines the current weapon identity, projectile, HUD art, fire rate, and spread.
+A player-owned firing tool mounted under the player's anchor. The player uses one generic weapon node whose active `WeaponConfig` determines the current weapon identity, projectile, active and inactive HUD icons, fire rate, and spread.
 _Code_: `player/weapons/weapon.gd`
 
 **Unlocked Weapon**:
@@ -56,7 +56,7 @@ An area that receives hits. Hurt boxes emit when compatible hit boxes overlap th
 _Code_: `common/hurt_box.gd`
 
 **HealthComponent**:
-The shared health owner for damageable actors. It listens to a hurt box, subtracts hit box damage, updates an optional health bar, and removes its parent at zero health.
+The shared health state and damage-intake component for damageable actors. It can listen to an optional hurt box, exposes direct damage and healing methods, and emits health and death signals for the owning scene to handle.
 _Code_: `common/health_component.gd`
 
 **Aim Direction**:
@@ -78,7 +78,7 @@ Player ownership is split across:
 - `WeaponInventory`: exported weapon config inventory, unlocked config filtering, active config cycling, single weapon-node assignment, anchor rotation, and per-weapon-key cooldown flow.
 - `PlayerAnimator`: legs, body, head, and arms animation routing, including attack animation state and weapon-specific arm animations. It avoids restarting unchanged non-attack animations every frame, while attack animation restarts remain explicit.
 
-Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from `WeaponConfig.weapon_key` profiles and shared direction tokens, with handgun as the fallback profile. HUD-facing player getters still delegate to the weapon inventory so the HUD can read the active and unlocked weapon configs without owning weapon state.
+Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from `WeaponConfig.weapon_key` profiles and shared direction tokens, with handgun as the fallback profile. The player wires weapon inventory and health signals to the HUD; player weapon getters still delegate to the weapon inventory for compatibility with existing callers.
 
 Important file: `player/scripts/player.gd`
 
@@ -92,7 +92,7 @@ Pressing fire starts the player's attack animation state and lets the active wea
 
 One generic weapon node lives under the player's `Anchor` marker. At startup, `WeaponInventory` filters exported `WeaponConfig` resources to the unlocked configs, assigns the first unlocked config to the weapon node, and cycles by swapping that node's active config.
 
-The current integrated weapons are handgun and shotgun. Both use standalone config resources for projectile scene, fire rate, spread, HUD texture, and canonical weapon key. `WeaponInventory` supplies the current fire direction, rotates the anchor, and tracks cooldowns per weapon key so cycling does not reset a weapon's cooldown.
+The current integrated weapons are handgun and shotgun. Both use standalone config resources for projectile scene, fire rate, spread, active and inactive HUD icons, and canonical weapon key. `WeaponInventory` supplies the current fire direction, rotates the anchor, and tracks cooldowns per weapon key so cycling does not reset a weapon's cooldown.
 
 Projectiles inherit from the shared projectile script, move along their direction, and destroy themselves on range, timer, animation completion, or hit depending on the concrete projectile.
 
@@ -109,7 +109,7 @@ Important files:
 
 Damage is handled through hit box and hurt box overlap, not direct calls between attackers and victims. Hit boxes declare their damage source and target mask. Hurt boxes declare their own type and accepted damage sources.
 
-`HealthComponent` connects to a hurt box's hit signal, subtracts the incoming hit box damage, updates a local health bar if one exists, and queues the actor for deletion when health reaches zero.
+`HealthComponent` owns health state, damage math, clamping, and health/death signals. It can connect to a hurt box's hit signal as an adapter, but UI updates, death animation, global events, and queue-free behavior belong to the owning player, Enemy, or environment scene.
 
 Important files:
 - `common/hit_box.gd`
@@ -138,9 +138,11 @@ Important files:
 
 ### HUD
 
-The player HUD shows weapon focus state and player health. The HUD currently supports handgun and shotgun weapon slots. It reads the player's active and unlocked weapon configs instead of maintaining an independent weapon model, and sources slot art from weapon config resources.
+The player HUD shows weapon focus state and player health. It renders weapon slots from the player's unlocked weapon configs in inventory order, uses each weapon config's active or inactive HUD icon for weapon-specific art, and owns the shared slot frame and focus indicator. It updates from weapon inventory and health signals instead of polling player state every frame.
 
-Important file: `player/scripts/player_hud.gd`
+Important files:
+- `player/scripts/player_hud.gd`
+- `player/scripts/player_hud_weapon_slot.gd`
 
 ## Scene And Content Map
 
@@ -172,9 +174,9 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 ## Current Gaps
 
 - Enemy activation, attack area transitions, and attack animation completion wiring are partly present but commented out in `enemy/mob.gd`.
-- The enemy state enum includes `DIE`, but current health behavior removes the parent directly when health reaches zero.
+- The enemy state enum includes `DIE`, but current Enemy death handling still removes the Enemy directly when health reaches zero.
 - Sniper rifle assets, sniper bullet scene/script, and sniper HUD assets exist, but the sniper rifle is not integrated as a current player weapon.
-- The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all of them yet.
+- The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
 
 ## Contributor Notes

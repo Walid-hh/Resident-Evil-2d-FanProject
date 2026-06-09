@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://d2kcrwo154i6i" path="res://player/player.tscn" id="1_46lwt"]
 [ext_resource type="Texture2D" uid="uid://bg2idqwgyydl6" path="res://levels/levelsAssets/placeholder.png" id="2_x25rp"]
+[ext_resource type="PackedScene" uid="uid://c5h3gt7t563ov" path="res://enemy/hector.tscn" id="3_gmgay"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gmgay"]
 texture = ExtResource("2_x25rp")
@@ -21,3 +22,6 @@ tile_set = SubResource("TileSet_w7r7j")
 
 [node name="Player" parent="." unique_id=2041772026 instance=ExtResource("1_46lwt")]
 position = Vector2(40, 130)
+
+[node name="Hector" parent="." unique_id=230910072 instance=ExtResource("3_gmgay")]
+position = Vector2(-124, 126)

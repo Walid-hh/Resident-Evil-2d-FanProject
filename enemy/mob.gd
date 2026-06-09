@@ -11,6 +11,7 @@ class_name Mob extends CharacterBody2D
 @onready var attack_enabler: AnimationPlayer = %AttackEnabler
 @onready var wait_timer: Timer = %WaitTimer
 @onready var attack: HitBox2D = %Attack
+@onready var health_component: HealthComponent = $HealthComponent
 
 # ── State ─────────────────────────────────────────────────────────────────────
 enum State {INACTIVE, RUN, ATTACK, DIE, WAIT}
@@ -29,6 +30,7 @@ var direction_to_player : float
 # ── Ready ─────────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	_find_player()
+	health_component.died.connect(_on_died)
 	activation_area.monitoring = true
 	attack_area.monitoring = false
 	#activation_area.body_entered.connect(
@@ -109,5 +111,10 @@ func _find_player() -> void:
 	player = get_tree().get_first_node_in_group("player")
 
 # ── Physics Helpers ───────────────────────────────────────────────────────────
+func _on_died(_source: Variant) -> void:
+	Global.mob_died.emit(self)
+	queue_free()
+
+
 func calculate_fall_gravity(height: float, time_to_descent: float) -> float:
 	return (2.0 * height) / pow(time_to_descent, 2.0)
