@@ -62,10 +62,6 @@ _Code_: `common/health_component.gd`
 **Aim Direction**:
 The player's current snapped attack direction. It is shared through `Global.player_aim_direction` so weapons and animations can agree on firing direction.
 
-**CameraArea**:
-A level-authored zone that constrains or focuses camera movement. Camera areas define jurisdiction, center boundary, zoom, and transition behavior.
-_Code_: `player/camera/camera_area_extended.gd`
-
 ## Runtime Systems
 
 ### Player
@@ -126,15 +122,14 @@ Important file: `enemy/mob.gd`
 
 ### Camera
 
-The camera follows the player with horizontal lookahead, smoothing, pixel snapping, zoom interpolation, optional peek, and shake. Camera bounds and focus behavior come from `CameraArea` nodes grouped as `camera_area`.
+The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport, prevents the player from falling behind the left screen edge, and while a camera stop is active it pins the player inside both visible frame edges. It also uses lightweight forward lookahead and keeps vertical motion mostly fixed so jumps do not bob the view.
 
-Camera areas own two related concepts:
-- Jurisdiction: the polygon that decides whether the player is inside the area.
-- Center boundary: the polygon that constrains where the camera center may move.
+Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters.
 
 Important files:
-- `player/camera/camera_extended.gd`
-- `player/camera/camera_area_extended.gd`
+- `player/camera/player_camera.gd`
+- `levels/camera_bounds.gd`
+- `levels/camera_stop_area.gd`
 
 ### HUD
 
@@ -176,6 +171,8 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 - Enemy activation, attack area transitions, and attack animation completion wiring are partly present but commented out in `enemy/mob.gd`.
 - The enemy state enum includes `DIE`, but current Enemy death handling still removes the Enemy directly when health reaches zero.
 - Sniper rifle assets, sniper bullet scene/script, and sniper HUD assets exist, but the sniper rifle is not integrated as a current player weapon.
+- Camera stop triggers can request and release stops, but no current encounter system automatically releases stops when an Enemy wave or boss is cleared.
+- Path2D camera rails are intentionally not part of the v1 camera implementation.
 - The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
 

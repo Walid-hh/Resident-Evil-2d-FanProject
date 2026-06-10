@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ofhalgdedaq" path="res://player/playerAssets/LegsJump-Sheet.png" id="3_8t03j"]
 [ext_resource type="Texture2D" uid="uid://b4l7dy1eu5uwt" path="res://player/playerAssets/LegsRun-Sheet.png" id="3_hg6s5"]
 [ext_resource type="Texture2D" uid="uid://bu7hxqjljoejm" path="res://player/playerAssets/BodyRun-Sheet.png" id="5_2ieo8"]
+[ext_resource type="Script" uid="uid://dwwq0g5qrxtnd" path="res://player/weapons/weapon_config.gd" id="5_dx5ib"]
 [ext_resource type="Texture2D" uid="uid://dkfy00tsjincy" path="res://player/playerAssets/CrouchBody.png" id="7_65viv"]
 [ext_resource type="Texture2D" uid="uid://dg1q5d5jiqss1" path="res://player/playerAssets/BodyIdle.png" id="7_g4c7l"]
 [ext_resource type="Texture2D" uid="uid://10ilmoftc7w6" path="res://player/playerAssets/ArmsHgIdle-Sheet.png" id="7_yllr7"]
@@ -37,8 +38,9 @@
 [ext_resource type="Script" uid="uid://de00t4naltaj8" path="res://player/scripts/aim_controller.gd" id="41_aim"]
 [ext_resource type="Script" uid="uid://07shku5lux7p" path="res://player/scripts/weapon_inventory.gd" id="42_inventory"]
 [ext_resource type="Script" uid="uid://f55nwghjga0n" path="res://player/scripts/player_animator.gd" id="43_animator"]
-[ext_resource type="Resource" path="res://player/weapons/configs/handgun_weapon_config.tres" id="44_handgun_config"]
-[ext_resource type="Resource" path="res://player/weapons/configs/shotgun_weapon_config.tres" id="45_shotgun_config"]
+[ext_resource type="Resource" uid="uid://b72yfv3kguuf7" path="res://player/weapons/configs/handgun_weapon_config.tres" id="44_handgun_config"]
+[ext_resource type="Resource" uid="uid://cshbo77h5lyrh" path="res://player/weapons/configs/shotgun_weapon_config.tres" id="45_shotgun_config"]
+[ext_resource type="Script" uid="uid://conmwp4igpvm1" path="res://player/camera/player_camera.gd" id="46_camera"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r7pn3"]
 atlas = ExtResource("2_e7oew")
@@ -914,8 +916,9 @@ script = ExtResource("1_oul6g")
 [node name="PlayerMotor" type="Node" parent="." unique_id=1100262111 node_paths=PackedStringArray("anchor")]
 unique_name_in_owner = true
 script = ExtResource("40_motor")
-jump_height = 70.0
-jump_time_to_peak = 0.32
+jump_height = 65.0
+jump_time_to_peak = 0.4
+jump_time_to_descent = 0.30000000000000004
 max_fall_speed = 300.0
 anchor = NodePath("../Anchor")
 
@@ -928,7 +931,7 @@ unique_name_in_owner = true
 script = ExtResource("42_inventory")
 anchor = NodePath("../Anchor")
 weapon = NodePath("../Anchor/Weapon")
-weapon_configs = Array[Resource]([ExtResource("44_handgun_config"), ExtResource("45_shotgun_config")])
+weapon_configs = Array[ExtResource("5_dx5ib")]([ExtResource("44_handgun_config"), ExtResource("45_shotgun_config")])
 
 [node name="PlayerAnimator" type="Node" parent="." unique_id=1100262114 node_paths=PackedStringArray("legs", "arms", "body", "head")]
 unique_name_in_owner = true
@@ -956,7 +959,7 @@ offset_bottom = -41.0
 
 [node name="Camera" type="Camera2D" parent="." unique_id=292591951]
 position = Vector2(0, -56)
-position_smoothing_speed = 20.0
+script = ExtResource("46_camera")
 
 [node name="Legs" type="AnimatedSprite2D" parent="." unique_id=1495406380]
 unique_name_in_owner = true
@@ -1042,7 +1045,7 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_constants/margin_left = 10
 
-[node name="WeaponSlotsContainer" type="HBoxContainer" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer"]
+[node name="WeaponSlotsContainer" type="HBoxContainer" parent="PlayerHUD/HUD/VBoxContainer/MarginContainer/HBoxContainer" unique_id=1585555899]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
