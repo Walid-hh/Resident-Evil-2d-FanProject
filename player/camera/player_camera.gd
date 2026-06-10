@@ -8,9 +8,11 @@ const CAMERA_STOP_AREA_GROUP := "camera_stop_area"
 @export var player_screen_x := 104.0
 @export var left_edge_margin := 8.0
 @export var right_edge_margin := 8.0
-@export var vertical_offset := -56.0
-@export var vertical_dead_zone := 12.0
+@export var vertical_offset := -48.0
 @export var follow_speed := 20.0
+@export_range(0.0, 1.0, 0.01) var follow_ease_weight := 1.0
+@export var vertical_follow_speed := 20.0
+@export_range(0.0, 1.0, 0.01) var vertical_follow_ease_weight := 1.0
 @export var lookahead_distance := 12.0
 @export var lookahead_speed := 8.0
 
@@ -43,10 +45,11 @@ func physics_update(delta: float) -> void:
 		_get_vertical_target_y()
 	)
 	target_camera_position = _clamp_camera_center(desired_position)
-	global_position = global_position.lerp(
-		target_camera_position,
-		1.0 - exp(-follow_speed * delta)
-	)
+	var horizontal_lerp := _get_lerp_alpha(follow_speed, delta, follow_ease_weight)
+	global_position.x = lerpf(global_position.x, target_camera_position.x, horizontal_lerp)
+	if _is_target_grounded():
+		var vertical_lerp := _get_lerp_alpha(vertical_follow_speed, delta, vertical_follow_ease_weight)
+		global_position.y = lerpf(global_position.y, target_camera_position.y, vertical_lerp)
 	if _has_active_stop():
 		_apply_stop_frame_constraint()
 	else:
@@ -139,13 +142,10 @@ func _get_desired_camera_x() -> float:
 
 
 func _get_vertical_target_y() -> float:
-	var current_y := target_camera_position.y
-	var target_y := target.global_position.y + vertical_offset
-	if target_y < current_y - vertical_dead_zone:
-		return target_y + vertical_dead_zone
-	if target_y > current_y + vertical_dead_zone:
-		return target_y - vertical_dead_zone
-	return current_y
+	if !_is_target_grounded():
+		return target_camera_position.y
+
+	return target.global_position.y + vertical_offset
 
 
 func _apply_left_edge_constraint() -> void:
@@ -205,3 +205,19 @@ func _get_active_stop_x() -> float:
 
 func _has_active_stop() -> bool:
 	return !_active_stop_positions.is_empty()
+
+
+func _is_target_grounded() -> bool:
+	if target.has_meta("camera_is_on_floor"):
+		return target.get_meta("camera_is_on_floor")
+	if target.has_method("get_camera_is_on_floor"):
+		return target.get_camera_is_on_floor()
+	if target is CharacterBody2D:
+		return (target as CharacterBody2D).is_on_floor()
+	return true
+
+
+func _get_lerp_alpha(speed: float, delta: float, ease_weight: float) -> float:
+	var speed_alpha := clampf(speed * delta, 0.0, 1.0)
+	var eased_alpha := 1.0 - exp(-speed * delta)
+	return lerpf(speed_alpha, eased_alpha, clampf(ease_weight, 0.0, 1.0))

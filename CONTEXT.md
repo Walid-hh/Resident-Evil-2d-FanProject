@@ -122,9 +122,9 @@ Important file: `enemy/mob.gd`
 
 ### Camera
 
-The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport, prevents the player from falling behind the left screen edge, and while a camera stop is active it pins the player inside both visible frame edges. It also uses lightweight forward lookahead and keeps vertical motion mostly fixed so jumps do not bob the view.
+The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport, prevents the player from falling behind the left screen edge, and while a camera stop is active it pins the player inside both visible frame edges. It also uses lightweight forward lookahead and eases the vertical camera toward a fixed `-48` pixel floor offset whenever the player is grounded, with configurable lerp blending, while holding the current vertical camera position during jumps and falls.
 
-Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters.
+Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. The current test level includes explicit camera bounds. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters.
 
 Important files:
 - `player/camera/player_camera.gd`
