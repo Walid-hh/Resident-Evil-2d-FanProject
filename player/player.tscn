@@ -958,10 +958,10 @@ offset_right = 24.0
 offset_bottom = -41.0
 
 [node name="Camera" type="Camera2D" parent="." unique_id=292591951 node_paths=PackedStringArray("target")]
+limit_enabled = false
 script = ExtResource("46_camera")
 target = NodePath("..")
 player_screen_x = 120.0
-follow_ease_weight = 0.5
 
 [node name="Legs" type="AnimatedSprite2D" parent="." unique_id=1495406380]
 unique_name_in_owner = true

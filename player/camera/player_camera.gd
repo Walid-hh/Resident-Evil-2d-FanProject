@@ -9,26 +9,38 @@ const CAMERA_STOP_AREA_GROUP := "camera_stop_area"
 @export var left_edge_margin := 8.0
 @export var right_edge_margin := 8.0
 @export var vertical_offset := -48.0
-@export var follow_speed := 20.0
-@export_range(0.0, 1.0, 0.01) var follow_ease_weight := 1.0
-@export var vertical_follow_speed := 20.0
-@export_range(0.0, 1.0, 0.01) var vertical_follow_ease_weight := 1.0
 @export var lookahead_distance := 12.0
 @export var lookahead_speed := 8.0
+@export var camera_tween_duration := 0.18
+@export var camera_tween_speed_scale := 1.0
+@export var camera_tween_transition := Tween.TRANS_SINE
+@export var camera_tween_ease := Tween.EASE_OUT
 
 var camera_bounds := Rect2(-120, -16, 2000, 180)
 var target_camera_position := Vector2.ZERO
 var _lookahead_x := 0.0
 var _active_stop_positions: Array[float] = []
+var _grounded_camera_y := 0.0
+var _has_grounded_camera_y := false
+var _camera_motion_start_position := Vector2.ZERO
+var _camera_motion_target_position := Vector2.ZERO
+var _camera_motion_elapsed := 0.0
 
 
 func _ready() -> void:
 	top_level = true
+	position_smoothing_enabled = false
+	set_physics_process(false)
 	make_current()
 	if target == null:
 		target = get_parent() as Node2D
-	call_deferred("_configure_from_level")
+	call_deferred("_initialize_from_level")
+
+
+func _initialize_from_level() -> void:
+	_configure_from_level()
 	snap_to_target()
+	set_physics_process(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -40,58 +52,48 @@ func physics_update(delta: float) -> void:
 		return
 
 	_update_lookahead(delta)
-	var desired_position := Vector2(
+	var desired_position := _snap_camera_position(_clamp_camera_center(Vector2(
 		_get_forward_target_x(),
 		_get_vertical_target_y()
-	)
-	target_camera_position = _clamp_camera_center(desired_position)
-	var horizontal_lerp := _get_lerp_alpha(follow_speed, delta, follow_ease_weight)
-	global_position.x = lerpf(global_position.x, target_camera_position.x, horizontal_lerp)
-	if _is_target_grounded():
-		var vertical_lerp := _get_lerp_alpha(vertical_follow_speed, delta, vertical_follow_ease_weight)
-		global_position.y = lerpf(global_position.y, target_camera_position.y, vertical_lerp)
-	if _has_active_stop():
-		_apply_stop_frame_constraint()
-	else:
-		_apply_left_edge_constraint()
+	)))
+	_advance_camera_motion(desired_position, delta)
 
 
 func configure_bounds(bounds: Rect2) -> void:
 	camera_bounds = bounds
-	target_camera_position = _clamp_camera_center(target_camera_position)
-	global_position = _clamp_camera_center(global_position)
+	target_camera_position = _snap_camera_position(_clamp_camera_center(target_camera_position))
+	_apply_hard_camera_target(target_camera_position)
 
 
 func request_camera_stop(stop_camera_x: float) -> void:
 	_active_stop_positions.append(stop_camera_x)
 	target_camera_position.x = minf(target_camera_position.x, _get_active_stop_x())
+	_apply_hard_camera_target(target_camera_position)
 
 
 func release_camera_stop(stop_camera_x: float) -> void:
 	_active_stop_positions.erase(stop_camera_x)
+	target_camera_position.x = minf(target_camera_position.x, _get_active_stop_x())
+	_apply_hard_camera_target(target_camera_position)
 
 
 func snap_to_target() -> void:
 	if target == null:
 		return
 
-	target_camera_position = _clamp_camera_center(Vector2(
+	target_camera_position = _snap_camera_position(_clamp_camera_center(Vector2(
 		_get_desired_camera_x(),
-		target.global_position.y + vertical_offset
-	))
-	global_position = target_camera_position
-	if _has_active_stop():
-		_apply_stop_frame_constraint()
-	else:
-		_apply_left_edge_constraint()
+		_get_vertical_target_y()
+	)))
+	_apply_hard_camera_target(target_camera_position)
 
 
 func get_screen_left() -> float:
-	return global_position.x - viewport_size.x * 0.5
+	return get_screen_center_position().x - viewport_size.x * 0.5
 
 
 func get_screen_right() -> float:
-	return global_position.x + viewport_size.x * 0.5
+	return get_screen_center_position().x + viewport_size.x * 0.5
 
 
 func get_target_camera_position() -> Vector2:
@@ -142,42 +144,15 @@ func _get_desired_camera_x() -> float:
 
 
 func _get_vertical_target_y() -> float:
-	if !_is_target_grounded():
-		return target_camera_position.y
+	if _is_target_grounded():
+		_grounded_camera_y = target.global_position.y + vertical_offset
+		_has_grounded_camera_y = true
+		return _grounded_camera_y
+
+	if _has_grounded_camera_y:
+		return _grounded_camera_y
 
 	return target.global_position.y + vertical_offset
-
-
-func _apply_left_edge_constraint() -> void:
-	if target == null:
-		return
-
-	var left_limit := get_screen_left() + left_edge_margin
-	if target.global_position.x >= left_limit:
-		return
-
-	target.global_position.x = left_limit
-	if target is CharacterBody2D:
-		var body := target as CharacterBody2D
-		body.velocity.x = maxf(body.velocity.x, 0.0)
-
-
-func _apply_stop_frame_constraint() -> void:
-	if target == null:
-		return
-
-	var left_limit := get_screen_left() + left_edge_margin
-	var right_limit := get_screen_right() - right_edge_margin
-	if target.global_position.x < left_limit:
-		target.global_position.x = left_limit
-		if target is CharacterBody2D:
-			var body := target as CharacterBody2D
-			body.velocity.x = maxf(body.velocity.x, 0.0)
-	elif target.global_position.x > right_limit:
-		target.global_position.x = right_limit
-		if target is CharacterBody2D:
-			var body := target as CharacterBody2D
-			body.velocity.x = minf(body.velocity.x, 0.0)
 
 
 func _clamp_camera_center(value: Vector2) -> Vector2:
@@ -207,17 +182,73 @@ func _has_active_stop() -> bool:
 	return !_active_stop_positions.is_empty()
 
 
+func _apply_hard_camera_target(position: Vector2) -> void:
+	_apply_camera_position(position)
+	_sync_camera_motion(target_camera_position)
+
+
+func _snap_camera_position(position: Vector2) -> Vector2:
+	return position.snapped(Vector2.ONE)
+
+
+func _advance_camera_motion(desired_position: Vector2, delta: float) -> void:
+	var tween_duration := _get_camera_tween_duration()
+	if tween_duration <= 0.0:
+		_apply_hard_camera_target(desired_position)
+		return
+
+	if desired_position != _camera_motion_target_position:
+		_camera_motion_start_position = target_camera_position
+		_camera_motion_target_position = desired_position
+		_camera_motion_elapsed = 0.0
+
+	_camera_motion_elapsed = minf(_camera_motion_elapsed + delta, tween_duration)
+	_apply_camera_position(Vector2(
+		Tween.interpolate_value(
+			_camera_motion_start_position.x,
+			_camera_motion_target_position.x - _camera_motion_start_position.x,
+			_camera_motion_elapsed,
+			tween_duration,
+			camera_tween_transition,
+			camera_tween_ease
+		),
+		Tween.interpolate_value(
+			_camera_motion_start_position.y,
+			_camera_motion_target_position.y - _camera_motion_start_position.y,
+			_camera_motion_elapsed,
+			tween_duration,
+			camera_tween_transition,
+			camera_tween_ease
+		)
+	))
+
+
+func _apply_camera_position(position: Vector2) -> void:
+	target_camera_position = _snap_camera_position(_clamp_camera_center(position))
+	global_position = target_camera_position
+
+
+func _sync_camera_motion(position: Vector2) -> void:
+	_camera_motion_start_position = position
+	_camera_motion_target_position = position
+	_camera_motion_elapsed = 0.0
+
+
+func _get_camera_tween_duration() -> float:
+	if camera_tween_duration <= 0.0:
+		return 0.0
+
+	return camera_tween_duration / maxf(camera_tween_speed_scale, 0.001)
+
+
 func _is_target_grounded() -> bool:
-	if target.has_meta("camera_is_on_floor"):
-		return target.get_meta("camera_is_on_floor")
-	if target.has_method("get_camera_is_on_floor"):
-		return target.get_camera_is_on_floor()
-	if target is CharacterBody2D:
-		return (target as CharacterBody2D).is_on_floor()
-	return true
+	if target == null:
+		return false
 
+	if target.has_method("camera_is_on_floor"):
+		return bool(target.call("camera_is_on_floor"))
 
-func _get_lerp_alpha(speed: float, delta: float, ease_weight: float) -> float:
-	var speed_alpha := clampf(speed * delta, 0.0, 1.0)
-	var eased_alpha := 1.0 - exp(-speed * delta)
-	return lerpf(speed_alpha, eased_alpha, clampf(ease_weight, 0.0, 1.0))
+	if target.has_method("is_on_floor"):
+		return bool(target.call("is_on_floor"))
+
+	return false

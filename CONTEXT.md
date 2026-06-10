@@ -122,9 +122,9 @@ Important file: `enemy/mob.gd`
 
 ### Camera
 
-The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport, prevents the player from falling behind the left screen edge, and while a camera stop is active it pins the player inside both visible frame edges. It also uses lightweight forward lookahead and eases the vertical camera toward a fixed `-48` pixel floor offset whenever the player is grounded, with configurable lerp blending, while holding the current vertical camera position during jumps and falls.
+The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport when it can advance, and stops at authored camera bounds or active camera stops without rewriting the Player's position or velocity. It also uses lightweight forward lookahead and tween-eased, pixel-snapped camera targets so the camera stays crisp for pixel art, while following a fixed `-48` pixel floor offset only while the Player is grounded.
 
-Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. The current test level includes explicit camera bounds. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters.
+Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. Authored level camera bounds are applied before the player's initial camera snap, so default camera bounds must not rewrite authored player spawn positions. The current test level includes explicit camera bounds. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters. Player off-screen movement is allowed by default when the camera is stopped; encounter confinement is a future opt-in gameplay system, not a responsibility of `PlayerCamera`.
 
 Important files:
 - `player/camera/player_camera.gd`

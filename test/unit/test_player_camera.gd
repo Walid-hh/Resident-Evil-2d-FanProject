@@ -3,15 +3,26 @@ extends GutTest
 var PlayerCameraScript: Script
 var CameraStopAreaScript: Script
 var CameraBoundsScript: Script
+var TestLevelScene: PackedScene
 
 var _player: CharacterBody2D
 var _camera
+
+
+class MockCameraTarget:
+	extends CharacterBody2D
+
+	var floor_state := true
+
+	func camera_is_on_floor() -> bool:
+		return floor_state
 
 
 func before_each() -> void:
 	PlayerCameraScript = load("res://player/camera/player_camera.gd")
 	CameraStopAreaScript = load("res://levels/camera_stop_area.gd")
 	CameraBoundsScript = load("res://levels/camera_bounds.gd")
+	TestLevelScene = load("res://levels/test_level.tscn")
 	_player = add_child_autofree(CharacterBody2D.new())
 	_player.add_to_group("player")
 	_camera = add_child_autofree(PlayerCameraScript.new())
@@ -19,11 +30,10 @@ func before_each() -> void:
 	_camera.viewport_size = Vector2(320, 180)
 	_camera.player_screen_x = 104.0
 	_camera.left_edge_margin = 8.0
-	_camera.follow_speed = 1000.0
-	_camera.vertical_follow_speed = 4.0
+	_camera.camera_tween_duration = 0.0
+	_camera.camera_tween_speed_scale = 1.0
 	_camera.lookahead_distance = 0.0
 	_camera.configure_bounds(Rect2(-120, -200, 2000, 720))
-	_player.set_meta("camera_is_on_floor", true)
 	_player.global_position = Vector2(40, 130)
 	_camera.snap_to_target()
 
@@ -39,78 +49,67 @@ func test_camera_progress_does_not_move_backward() -> void:
 	assert_eq(_camera.get_target_camera_position().x, advanced_x)
 
 
-func test_left_edge_constraint_keeps_player_in_view() -> void:
+func test_camera_target_snaps_to_pixels() -> void:
+	_player.global_position = Vector2(40.25, 300)
+	_camera.physics_update(0.1)
+
+	assert_eq(_camera.get_target_camera_position().x, roundf(_camera.get_target_camera_position().x))
+	assert_eq(_camera.get_target_camera_position().y, roundf(_camera.get_target_camera_position().y))
+	assert_eq(_camera.get_target_camera_position().y, 252.0)
+
+
+func test_camera_holds_vertical_position_until_grounded() -> void:
+	var floor_target: MockCameraTarget = add_child_autofree(MockCameraTarget.new())
+	floor_target.global_position = Vector2(40, 130)
+	floor_target.floor_state = true
+	_camera.target = floor_target
+
+	_camera.snap_to_target()
+	var grounded_y: float = _camera.get_target_camera_position().y
+
+	floor_target.global_position.y = 10.0
+	floor_target.floor_state = false
+	_camera.physics_update(0.1)
+
+	assert_eq(_camera.get_target_camera_position().y, grounded_y)
+
+	floor_target.global_position.y = 200.0
+	floor_target.floor_state = true
+	_camera.physics_update(0.1)
+
+	assert_eq(_camera.get_target_camera_position().y, 152.0)
+
+
+func test_camera_uses_tween_easing_for_motion() -> void:
+	_camera.camera_tween_duration = 0.5
+	_camera.camera_tween_speed_scale = 1.0
+	_camera.camera_tween_transition = Tween.TRANS_QUAD
+	_camera.camera_tween_ease = Tween.EASE_OUT
+	_player.global_position.x = 220.25
+
+	_camera.physics_update(0.25)
+
+	var expected_x := roundf(Tween.interpolate_value(
+		96.0,
+		180.0,
+		0.25,
+		0.5,
+		Tween.TRANS_QUAD,
+		Tween.EASE_OUT
+	))
+
+	assert_eq(_camera.get_target_camera_position().x, expected_x)
+
+
+func test_camera_update_does_not_move_player_left_of_visible_frame() -> void:
 	_camera.global_position.x = 100.0
 	_player.global_position.x = -100.0
+	_player.velocity.x = -40.0
 
 	_camera.physics_update(0.1)
 
-	assert_eq(_player.global_position.x, _camera.get_screen_left() + _camera.left_edge_margin)
-	assert_eq(_player.velocity.x, 0.0)
-
-
-func test_grounded_player_eases_camera_toward_vertical_offset() -> void:
-	_player.set_meta("camera_is_on_floor", true)
-	_player.global_position.y = 300.0
-
-	_camera.physics_update(0.1)
-
-	assert_eq(_camera.get_target_camera_position().y, 252.0)
-	assert_gt(_camera.global_position.y, 132.0)
-	assert_lt(_camera.global_position.y, 252.0)
-
-	var first_step_y := _camera.global_position.y
-	_camera.physics_update(0.1)
-
-	assert_gt(_camera.global_position.y, first_step_y)
-	assert_lt(_camera.global_position.y, 252.0)
-
-
-func test_vertical_lerp_ease_weight_changes_the_response_curve() -> void:
-	_player.set_meta("camera_is_on_floor", true)
-	_player.global_position.y = 300.0
-	_camera.vertical_follow_speed = 5.0
-	_camera.global_position.y = 132.0
-	_camera.target_camera_position.y = 132.0
-	_camera.vertical_follow_ease_weight = 0.0
-
-	_camera.physics_update(0.1)
-	var linear_y := _camera.global_position.y
-
-	_camera.global_position.y = 132.0
-	_camera.target_camera_position.y = 132.0
-	_camera.vertical_follow_ease_weight = 1.0
-	_camera.physics_update(0.1)
-	var eased_y := _camera.global_position.y
-
-	assert_gt(linear_y, eased_y)
-
-
-func test_camera_holds_vertical_target_while_airborne_then_resumes_on_landing() -> void:
-	_player.global_position.y = 300.0
-	_player.set_meta("camera_is_on_floor", true)
-
-	_camera.physics_update(0.1)
-
-	var grounded_y := _camera.global_position.y
-	assert_gt(grounded_y, 132.0)
-	assert_lt(grounded_y, 252.0)
-
-	_player.set_meta("camera_is_on_floor", false)
-	_player.global_position.y = 70.0
-
-	_camera.physics_update(0.1)
-
-	assert_eq(_camera.get_target_camera_position().y, 252.0)
-	assert_eq(_camera.global_position.y, grounded_y)
-
-	_player.global_position.y = 100.0
-	_player.set_meta("camera_is_on_floor", true)
-	_camera.physics_update(0.1)
-
-	assert_eq(_camera.get_target_camera_position().y, 52.0)
-	assert_lt(_camera.global_position.y, grounded_y)
-	assert_gt(_camera.global_position.y, 52.0)
+	assert_eq(_player.global_position.x, -100.0)
+	assert_eq(_player.velocity.x, -40.0)
 
 
 func test_level_bounds_clamp_camera_center() -> void:
@@ -120,6 +119,7 @@ func test_level_bounds_clamp_camera_center() -> void:
 	_camera.snap_to_target()
 
 	assert_eq(_camera.global_position, Vector2(160, 90))
+	assert_eq(_camera.get_screen_center_position(), Vector2(160, 90))
 
 
 func test_camera_bounds_returns_authored_rect() -> void:
@@ -139,6 +139,31 @@ func test_camera_configures_from_level_camera_bounds() -> void:
 
 	assert_eq(_camera.camera_bounds, Rect2(0, 0, 320, 180))
 	assert_eq(_camera.global_position, Vector2(160, 90))
+	assert_eq(_camera.get_screen_center_position(), Vector2(160, 90))
+
+
+func test_initial_level_bounds_do_not_move_authored_player_spawn() -> void:
+	var bounds_node = add_child_autofree(CameraBoundsScript.new())
+	bounds_node.bounds = Rect2(-750, -710, 1800, 1000)
+	_player.global_position = Vector2(-416, 128)
+	_camera.camera_bounds = Rect2(-120, -16, 2000, 180)
+	_camera.global_position = Vector2.ZERO
+	_camera.target_camera_position = Vector2.ZERO
+
+	_camera._configure_from_level()
+	_camera.snap_to_target()
+
+	assert_eq(_player.global_position, Vector2(-416, 128))
+
+
+func test_test_level_launch_preserves_authored_player_spawn() -> void:
+	var level: Node = add_child_autofree(TestLevelScene.instantiate())
+	var level_player := level.get_node("Player") as Node2D
+
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	assert_eq(level_player.global_position, Vector2(-416, 128))
 
 
 func test_camera_stop_blocks_and_releases_forward_progress() -> void:
@@ -154,15 +179,17 @@ func test_camera_stop_blocks_and_releases_forward_progress() -> void:
 	assert_gt(_camera.get_target_camera_position().x, 160.0)
 
 
-func test_camera_stop_pins_player_to_both_edges_of_the_frame() -> void:
+func test_camera_stop_does_not_move_player_outside_visible_frame() -> void:
 	_camera.request_camera_stop(160.0)
 	_camera.global_position.x = 100.0
 	_player.global_position.x = 400.0
+	_player.velocity.x = 80.0
 
 	_camera.physics_update(0.1)
 
-	assert_eq(_player.global_position.x, _camera.get_screen_right() - _camera.right_edge_margin)
-	assert_eq(_player.velocity.x, 0.0)
+	assert_lte(_camera.get_target_camera_position().x, 160.0)
+	assert_eq(_player.global_position.x, 400.0)
+	assert_eq(_player.velocity.x, 80.0)
 
 
 func test_camera_stop_area_requests_and_releases_for_player() -> void:
