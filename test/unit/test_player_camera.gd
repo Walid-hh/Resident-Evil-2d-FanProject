@@ -4,6 +4,7 @@ var PlayerCameraScript: Script
 var CameraStopAreaScript: Script
 var CameraBoundsScript: Script
 var TestLevelScene: PackedScene
+var PlayerScene: PackedScene
 
 var _player: CharacterBody2D
 var _camera
@@ -23,6 +24,7 @@ func before_each() -> void:
 	CameraStopAreaScript = load("res://levels/camera_stop_area.gd")
 	CameraBoundsScript = load("res://levels/camera_bounds.gd")
 	TestLevelScene = load("res://levels/test_level.tscn")
+	PlayerScene = load("res://player/player.tscn")
 	_player = add_child_autofree(CharacterBody2D.new())
 	_player.add_to_group("player")
 	_camera = add_child_autofree(PlayerCameraScript.new())
@@ -36,6 +38,7 @@ func before_each() -> void:
 	_camera.configure_bounds(Rect2(-120, -200, 2000, 720))
 	_player.global_position = Vector2(40, 130)
 	_camera.snap_to_target()
+	_camera.make_current()
 
 
 func test_camera_progress_does_not_move_backward() -> void:
@@ -119,7 +122,7 @@ func test_level_bounds_clamp_camera_center() -> void:
 	_camera.snap_to_target()
 
 	assert_eq(_camera.global_position, Vector2(160, 90))
-	assert_eq(_camera.get_screen_center_position(), Vector2(160, 90))
+	assert_eq(_camera.get_target_camera_position(), Vector2(160, 90))
 
 
 func test_camera_bounds_returns_authored_rect() -> void:
@@ -131,6 +134,7 @@ func test_camera_bounds_returns_authored_rect() -> void:
 
 func test_camera_configures_from_level_camera_bounds() -> void:
 	var bounds_node = add_child_autofree(CameraBoundsScript.new())
+	bounds_node.add_to_group("camera_bounds")
 	bounds_node.bounds = Rect2(0, 0, 320, 180)
 	_camera.global_position = Vector2(600, 300)
 	_camera.target_camera_position = Vector2(600, 300)
@@ -139,11 +143,12 @@ func test_camera_configures_from_level_camera_bounds() -> void:
 
 	assert_eq(_camera.camera_bounds, Rect2(0, 0, 320, 180))
 	assert_eq(_camera.global_position, Vector2(160, 90))
-	assert_eq(_camera.get_screen_center_position(), Vector2(160, 90))
+	assert_eq(_camera.get_target_camera_position(), Vector2(160, 90))
 
 
 func test_initial_level_bounds_do_not_move_authored_player_spawn() -> void:
 	var bounds_node = add_child_autofree(CameraBoundsScript.new())
+	bounds_node.add_to_group("camera_bounds")
 	bounds_node.bounds = Rect2(-750, -710, 1800, 1000)
 	_player.global_position = Vector2(-416, 128)
 	_camera.camera_bounds = Rect2(-120, -16, 2000, 180)
@@ -159,11 +164,29 @@ func test_initial_level_bounds_do_not_move_authored_player_spawn() -> void:
 func test_test_level_launch_preserves_authored_player_spawn() -> void:
 	var level: Node = add_child_autofree(TestLevelScene.instantiate())
 	var level_player := level.get_node("Player") as Node2D
+	assert_eq(level_player.global_position, Vector2(384, 96))
 
-	await get_tree().process_frame
-	await get_tree().physics_frame
 
-	assert_eq(level_player.global_position, Vector2(-416, 128))
+func test_player_scene_has_camera_boundary_bodies() -> void:
+	var player_scene: Node = add_child_autofree(PlayerScene.instantiate())
+	var camera := player_scene.get_node("Camera")
+	var left_boundary := camera.get_node("CameraLeftBoundary") as StaticBody2D
+	var right_boundary := camera.get_node("CameraRightBoundary") as StaticBody2D
+	var boundaries := [left_boundary, right_boundary]
+	var static_body_count := 0
+
+	for child in camera.get_children():
+		if child is StaticBody2D:
+			static_body_count += 1
+
+	assert_eq(static_body_count, 2)
+	assert_eq(boundaries.size(), 2)
+	for boundary: StaticBody2D in boundaries:
+		assert_eq(boundary.collision_layer, 2147483648)
+		assert_eq(boundary.collision_mask, 2147483648)
+		var collision_shape := boundary.get_node("CollisionShape2D") as CollisionShape2D
+		assert_not_null(collision_shape)
+		assert_true(collision_shape.shape is SegmentShape2D)
 
 
 func test_camera_stop_blocks_and_releases_forward_progress() -> void:

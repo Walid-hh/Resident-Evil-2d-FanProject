@@ -62,6 +62,29 @@ _Code_: `common/health_component.gd`
 **Aim Direction**:
 The player's current snapped attack direction. It is shared through `Global.player_aim_direction` so weapons and animations can agree on firing direction.
 
+**GridInventory**:
+A reusable spatial inventory with finite columns and rows. It owns placed inventory items, validates rectangular cell occupancy, and emits when successful mutations change its contents. Do not confuse this with `WeaponInventory`, which is the current player weapon loadout selector.
+_Code_: `inventory/grid_inventory.gd`
+
+**Cell**:
+One addressable position in a `GridInventory`. Cells use `Vector2i` coordinates with `(0, 0)` as the top-left cell.
+
+**ItemConfig**:
+A reusable item definition. It stores shared item data such as canonical item key, display name, rectangular footprint, rotation permission, and optional UI icon.
+_Code_: `inventory/item_config.gd`
+
+**InventoryItem**:
+One placed copy of an `ItemConfig` inside a `GridInventory`. It owns per-copy state such as generated instance id, origin cell, and rotation state.
+_Code_: `inventory/inventory_item.gd`
+
+**PlayerInventory**:
+A player-owned inventory component. It wraps the reusable `GridInventory`, owns the player's current spatial inventory contents, and seeds the current demo inventory items.
+_Code_: `player/scripts/player_inventory.gd`
+
+**Pause Menu**:
+The player-facing pause overlay opened by the `pause_menu` input action. It currently pauses gameplay and shows the player's read-only inventory grid.
+_Code_: `player/scripts/pause_menu.gd`
+
 ## Runtime Systems
 
 ### Player
@@ -73,6 +96,7 @@ Player ownership is split across:
 - `AimController`: horizontal input, snapped aim direction, facing, and compatibility writes to `Global.player_aim_direction` and `Global.player_last_direction`.
 - `WeaponInventory`: exported weapon config inventory, unlocked config filtering, active config cycling, single weapon-node assignment, anchor rotation, and per-weapon-key cooldown flow.
 - `PlayerAnimator`: legs, body, head, and arms animation routing, including attack animation state and weapon-specific arm animations. It avoids restarting unchanged non-attack animations every frame, while attack animation restarts remain explicit.
+- `PlayerInventory`: player-owned spatial inventory state backed by `GridInventory`.
 
 Weapon choice and firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from `WeaponConfig.weapon_key` profiles and shared direction tokens, with handgun as the fallback profile. The player wires weapon inventory and health signals to the HUD; player weapon getters still delegate to the weapon inventory for compatibility with existing callers.
 
@@ -124,6 +148,8 @@ Important file: `enemy/mob.gd`
 
 The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport when it can advance, and stops at authored camera bounds or active camera stops without rewriting the Player's position or velocity. It also uses lightweight forward lookahead and tween-eased, pixel-snapped camera targets so the camera stays crisp for pixel art, while following a fixed `-48` pixel floor offset only while the Player is grounded.
 
+The player scene also carries two `StaticBody2D` camera boundary bodies on the Camera node, one at each horizontal side of the frame, with controlled collision layer and mask settings so they only keep the Player inside the visible area. This visible-frame confinement is owned by scene collision bodies, not by `PlayerCamera`.
+
 Levels define explicit `CameraBounds` so camera limits are authored intentionally instead of inferred from TileMap content. Authored level camera bounds are applied before the player's initial camera snap, so default camera bounds must not rewrite authored player spawn positions. The current test level includes explicit camera bounds. `CameraStopArea` can request and release horizontal camera stops for arena or boss encounters. Player off-screen movement is allowed by default when the camera is stopped; encounter confinement is a future opt-in gameplay system, not a responsibility of `PlayerCamera`.
 
 Important files:
@@ -139,9 +165,23 @@ Important files:
 - `player/scripts/player_hud.gd`
 - `player/scripts/player_hud_weapon_slot.gd`
 
+### Grid Inventory
+
+`GridInventory` is the core model for Resident Evil 4-style spatial inventory behavior. It is reusable gameplay infrastructure, not player-only UI state. The v1 system supports rectangular item footprints, per-item rotation permission, explicit placement, first-fit placement, moving, rotating, removing, occupancy queries, and result objects with failure reasons.
+
+The player currently has a read-only Pause Menu inventory screen that renders the player-owned `GridInventory`. There is no drag and drop, stacking, quantities, pickup integration, save/load format, or weapon availability bridge yet. `WeaponInventory` remains the current weapon loadout selector and cooldown owner.
+
+Important files:
+- `inventory/grid_inventory.gd`
+- `inventory/item_config.gd`
+- `inventory/inventory_item.gd`
+- `inventory/inventory_placement_result.gd`
+
 ## Scene And Content Map
 
 `common/` contains shared gameplay components such as global state, health, hit boxes, and hurt boxes.
+
+`inventory/` contains reusable grid inventory model scripts.
 
 `player/` contains the player scene, player logic, camera logic, weapons, projectiles, player animation assets, and HUD assets.
 
@@ -159,8 +199,9 @@ Input actions are defined in `project.godot`:
 - `aim`: enter aim state.
 - `next_weapon`: cycle forward through unlocked weapons.
 - `previous_weapon`: cycle backward through unlocked weapons.
+- `pause_menu`: open and close the Pause Menu.
 
-Keyboard defaults are WASD for directions, Space for jump, U for fire, I for aim, K for next weapon, and J for previous weapon. Gamepad bindings also exist for movement, jump, fire, aim, and weapon cycling.
+Keyboard defaults are WASD for directions, Space for jump, U for fire, I for aim, K for next weapon, J for previous weapon, and Escape for the Pause Menu. Gamepad bindings also exist for movement, jump, fire, aim, and weapon cycling.
 
 ## Tests
 
@@ -173,8 +214,10 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 - Sniper rifle assets, sniper bullet scene/script, and sniper HUD assets exist, but the sniper rifle is not integrated as a current player weapon.
 - Camera stop triggers can request and release stops, but no current encounter system automatically releases stops when an Enemy wave or boss is cleared.
 - Path2D camera rails are intentionally not part of the v1 camera implementation.
+- The player scene's Camera node includes two boundary `StaticBody2D` nodes with constrained collision layers and masks to keep the Player from leaving the visible frame.
 - The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
+- The Pause Menu inventory screen is read-only. It does not yet have drag/drop interaction, stacking, pickup integration, save/load support, or weapon availability integration.
 
 ## Contributor Notes
 

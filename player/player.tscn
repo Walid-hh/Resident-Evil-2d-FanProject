@@ -41,6 +41,18 @@
 [ext_resource type="Resource" uid="uid://b72yfv3kguuf7" path="res://player/weapons/configs/handgun_weapon_config.tres" id="44_handgun_config"]
 [ext_resource type="Resource" uid="uid://cshbo77h5lyrh" path="res://player/weapons/configs/shotgun_weapon_config.tres" id="45_shotgun_config"]
 [ext_resource type="Script" uid="uid://conmwp4igpvm1" path="res://player/camera/player_camera.gd" id="46_camera"]
+[ext_resource type="Script" path="res://player/scripts/player_inventory.gd" id="47_player_inventory"]
+[ext_resource type="Script" path="res://inventory/grid_inventory.gd" id="48_grid_inventory"]
+[ext_resource type="Script" path="res://player/scripts/pause_menu.gd" id="49_pause_menu"]
+[ext_resource type="Script" path="res://player/scripts/inventory_grid_view.gd" id="50_inventory_grid_view"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_a2xo5"]
+a = Vector2(0, -90)
+b = Vector2(0, 90)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_art4l"]
+a = Vector2(0, -90)
+b = Vector2(0, 90)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r7pn3"]
 atlas = ExtResource("2_e7oew")
@@ -911,6 +923,8 @@ anti_aliasing = false
 
 [node name="Player" type="CharacterBody2D" unique_id=2041772026 groups=["player"]]
 z_index = 1
+collision_layer = 2147483649
+collision_mask = 2147483649
 script = ExtResource("1_oul6g")
 
 [node name="PlayerMotor" type="Node" parent="." unique_id=1100262111 node_paths=PackedStringArray("anchor")]
@@ -941,6 +955,14 @@ arms = NodePath("../Arms")
 body = NodePath("../Body")
 head = NodePath("../Head")
 
+[node name="PlayerInventory" type="Node" parent="." node_paths=PackedStringArray("grid_inventory")]
+unique_name_in_owner = true
+script = ExtResource("47_player_inventory")
+grid_inventory = NodePath("GridInventory")
+
+[node name="GridInventory" type="Node" parent="PlayerInventory"]
+script = ExtResource("48_grid_inventory")
+
 [node name="StateDebugLabel" type="Label" parent="." unique_id=493470895]
 unique_name_in_owner = true
 visible = false
@@ -962,6 +984,23 @@ limit_enabled = false
 script = ExtResource("46_camera")
 target = NodePath("..")
 player_screen_x = 120.0
+camera_tween_duration = 0.5
+
+[node name="CameraRightBoundary" type="StaticBody2D" parent="Camera" unique_id=948335356]
+position = Vector2(160, 0)
+collision_layer = 2147483648
+collision_mask = 2147483648
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Camera/CameraRightBoundary" unique_id=276045859]
+shape = SubResource("SegmentShape2D_a2xo5")
+
+[node name="CameraLeftBoundary" type="StaticBody2D" parent="Camera" unique_id=1940894773]
+position = Vector2(-160, 0)
+collision_layer = 2147483648
+collision_mask = 2147483648
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Camera/CameraLeftBoundary" unique_id=1004238643]
+shape = SubResource("SegmentShape2D_art4l")
 
 [node name="Legs" type="AnimatedSprite2D" parent="." unique_id=1495406380]
 unique_name_in_owner = true
@@ -1067,3 +1106,44 @@ theme_override_styles/background = SubResource("StyleBoxFlat_art4l")
 theme_override_styles/fill = SubResource("StyleBoxFlat_fjxoa")
 value = 50.0
 show_percentage = false
+
+[node name="PauseMenuLayer" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="PauseMenu" type="Control" parent="PauseMenuLayer" node_paths=PackedStringArray("player_inventory", "inventory_grid_view")]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("49_pause_menu")
+player_inventory = NodePath("../../PlayerInventory")
+inventory_grid_view = NodePath("InventoryGridView")
+
+[node name="Overlay" type="ColorRect" parent="PauseMenuLayer/PauseMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03137255, 0.03529412, 0.039215688, 0.94)
+
+[node name="Heading" type="Label" parent="PauseMenuLayer/PauseMenu"]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 36.0
+text = "Pause Menu"
+horizontal_alignment = 1
+
+[node name="InventoryGridView" type="Control" parent="PauseMenuLayer/PauseMenu"]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 56.0
+offset_right = 236.0
+offset_bottom = 132.0
+script = ExtResource("50_inventory_grid_view")
