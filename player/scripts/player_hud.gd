@@ -7,6 +7,7 @@ const PLAYER_HUD_WEAPON_SLOT_SCENE := preload("res://player/ui/player_hud_weapon
 
 var _weapon_slots: Array = []
 var _active_weapon_config: WeaponConfig
+var _weapon_ammo_counts := {}
 
 
 func _ready() -> void:
@@ -39,6 +40,11 @@ func set_active_weapon_config(active_weapon_config: WeaponConfig) -> void:
 	_sync_active_weapon_slots()
 
 
+func set_weapon_ammo_counts(weapon_ammo_counts: Dictionary) -> void:
+	_weapon_ammo_counts = weapon_ammo_counts.duplicate()
+	_sync_weapon_ammo_counts()
+
+
 func set_health_values(current_health: int, max_health: int) -> void:
 	if health_bar == null:
 		return
@@ -61,3 +67,19 @@ func _sync_active_weapon_slots() -> void:
 			continue
 
 		weapon_slot.set_active(weapon_slot.get_weapon_config() == _active_weapon_config)
+
+	_sync_weapon_ammo_counts()
+
+
+func _sync_weapon_ammo_counts() -> void:
+	for weapon_slot in _weapon_slots:
+		if weapon_slot == null:
+			continue
+
+		var weapon_config: WeaponConfig = weapon_slot.get_weapon_config()
+		if weapon_config == null:
+			weapon_slot.set_ammo_quantity(0, false)
+			continue
+
+		var ammo_quantity := int(_weapon_ammo_counts.get(weapon_config.weapon_key, -1 if weapon_config.ammo_item_key == &"" else 0))
+		weapon_slot.set_ammo_quantity(ammo_quantity, weapon_config.ammo_item_key == &"")

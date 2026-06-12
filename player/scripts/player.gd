@@ -11,18 +11,22 @@ class_name Player extends CharacterBody2D
 @onready var aim_controller: AimController = %AimController
 @onready var weapon_inventory: WeaponInventory = %WeaponInventory
 @onready var player_animator: PlayerAnimator = %PlayerAnimator
+@onready var player_inventory: PlayerInventory = %PlayerInventory
 @onready var health_component: HealthComponent = $HealthComponent
 @onready var player_hud: PlayerHUD = $PlayerHUD/HUD
 
 
 func _ready() -> void:
+	player_inventory.initialize()
 	weapon_inventory.unlocked_weapon_configs_changed.connect(player_hud.set_weapon_slots)
 	weapon_inventory.active_weapon_config_changed.connect(player_hud.set_active_weapon_config)
 	health_component.health_changed.connect(player_hud.set_health_values)
+	player_inventory.get_grid_inventory().inventory_changed.connect(_sync_weapon_ammo_counts)
 	weapon_inventory.initialize()
 	player_animator.attack_animation_finished.connect(_on_attack_animation_finished)
 	health_component.died.connect(_on_died)
 	player_hud.set_health_values(health_component.health, health_component.max_health)
+	_sync_weapon_ammo_counts()
 
 
 func _physics_process(delta: float) -> void:
@@ -50,13 +54,13 @@ func _physics_process(delta: float) -> void:
 		!player_animator.is_firing()
 	)
 
-	weapon_inventory.physics_update(
+	var shot_fired := weapon_inventory.physics_update(
 		delta,
 		fire_pressed,
 		aim_controller.get_aim_direction(),
 		aim_controller.get_last_horizontal_direction()
 	)
-	if fire_pressed:
+	if shot_fired:
 		player_animator.start_attack(aim_controller.get_aim_direction())
 
 	if next_weapon_pressed:
@@ -86,6 +90,19 @@ func _on_died(_source: Variant) -> void:
 func _update_debug_labels() -> void:
 	state_debug_label.text = motor.get_state_name()
 	animation_debug_label.text = arms.animation
+
+
+func _sync_weapon_ammo_counts() -> void:
+	var ammo_counts := {}
+	for weapon_config: WeaponConfig in weapon_inventory.get_unlocked_weapon_configs():
+		if weapon_config == null:
+			continue
+		if weapon_config.ammo_item_key == &"":
+			ammo_counts[weapon_config.weapon_key] = -1
+		else:
+			ammo_counts[weapon_config.weapon_key] = player_inventory.get_item_quantity(weapon_config.ammo_item_key)
+
+	player_hud.set_weapon_ammo_counts(ammo_counts)
 
 
 func get_weapon_in_use() -> Weapon:

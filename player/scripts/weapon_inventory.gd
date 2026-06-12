@@ -5,6 +5,7 @@ signal active_weapon_config_changed(active_weapon_config: WeaponConfig)
 
 @export var anchor: Marker2D
 @export var weapon: Weapon
+@export var player_inventory: PlayerInventory
 @export var weapon_configs: Array[WeaponConfig] = []
 
 var unlocked_weapon_configs: Array[WeaponConfig] = []
@@ -20,15 +21,21 @@ func initialize() -> void:
 	active_weapon_config_changed.emit(active_weapon_config)
 
 
-func physics_update(delta: float, fire_pressed: bool, aim_direction: Vector2, fallback_direction: float) -> void:
+func physics_update(delta: float, fire_pressed: bool, aim_direction: Vector2, fallback_direction: float) -> bool:
 	_process_active_cooldown(delta)
 	var fire_direction := WeaponFireMath.get_fire_direction(aim_direction, fallback_direction)
 
 	WeaponFireMath.apply_anchor_rotation(anchor, fire_direction)
 
 	if fire_pressed and weapon != null and active_weapon_config != null and _can_active_weapon_fire():
+		if !_consume_active_weapon_ammo():
+			return false
+
 		weapon.fire(fire_direction)
 		_cooldowns[_get_config_key(active_weapon_config)] = 0.0
+		return true
+
+	return false
 
 
 func cycle_next_unlocked_weapon() -> void:
@@ -100,9 +107,33 @@ func _can_active_weapon_fire() -> bool:
 		return false
 	if active_weapon_config.projectile_scene == null:
 		return false
+	if !_has_active_weapon_ammo():
+		return false
 
 	var key := _get_config_key(active_weapon_config)
 	return float(_cooldowns.get(key, active_weapon_config.fire_rate)) >= active_weapon_config.fire_rate
+
+
+func _has_active_weapon_ammo() -> bool:
+	if active_weapon_config == null:
+		return false
+	if active_weapon_config.ammo_item_key == &"":
+		return true
+	if player_inventory == null:
+		return false
+
+	return player_inventory.has_item_quantity(active_weapon_config.ammo_item_key, active_weapon_config.ammo_per_shot)
+
+
+func _consume_active_weapon_ammo() -> bool:
+	if active_weapon_config == null:
+		return false
+	if active_weapon_config.ammo_item_key == &"":
+		return true
+	if player_inventory == null:
+		return false
+
+	return player_inventory.consume_item_quantity(active_weapon_config.ammo_item_key, active_weapon_config.ammo_per_shot)
 
 
 func _get_config_key(config: WeaponConfig) -> StringName:

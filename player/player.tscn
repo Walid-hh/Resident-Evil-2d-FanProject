@@ -940,11 +940,12 @@ anchor = NodePath("../Anchor")
 unique_name_in_owner = true
 script = ExtResource("41_aim")
 
-[node name="WeaponInventory" type="Node" parent="." unique_id=1100262113 node_paths=PackedStringArray("anchor", "weapon")]
+[node name="WeaponInventory" type="Node" parent="." unique_id=1100262113 node_paths=PackedStringArray("anchor", "weapon", "player_inventory")]
 unique_name_in_owner = true
 script = ExtResource("42_inventory")
 anchor = NodePath("../Anchor")
 weapon = NodePath("../Anchor/Weapon")
+player_inventory = NodePath("../PlayerInventory")
 weapon_configs = Array[ExtResource("5_dx5ib")]([ExtResource("44_handgun_config"), ExtResource("45_shotgun_config")])
 
 [node name="PlayerAnimator" type="Node" parent="." unique_id=1100262114 node_paths=PackedStringArray("legs", "arms", "body", "head")]
@@ -955,12 +956,12 @@ arms = NodePath("../Arms")
 body = NodePath("../Body")
 head = NodePath("../Head")
 
-[node name="PlayerInventory" type="Node" parent="." node_paths=PackedStringArray("grid_inventory")]
+[node name="PlayerInventory" type="Node" parent="." unique_id=1873394899 node_paths=PackedStringArray("grid_inventory")]
 unique_name_in_owner = true
 script = ExtResource("47_player_inventory")
 grid_inventory = NodePath("GridInventory")
 
-[node name="GridInventory" type="Node" parent="PlayerInventory"]
+[node name="GridInventory" type="Node" parent="PlayerInventory" unique_id=1361866505]
 script = ExtResource("48_grid_inventory")
 
 [node name="StateDebugLabel" type="Label" parent="." unique_id=493470895]
@@ -1107,10 +1108,10 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_fjxoa")
 value = 50.0
 show_percentage = false
 
-[node name="PauseMenuLayer" type="CanvasLayer" parent="."]
+[node name="PauseMenuLayer" type="CanvasLayer" parent="." unique_id=415177335]
 layer = 20
 
-[node name="PauseMenu" type="Control" parent="PauseMenuLayer" node_paths=PackedStringArray("player_inventory", "inventory_grid_view")]
+[node name="PauseMenu" type="Control" parent="PauseMenuLayer" unique_id=1109508322 node_paths=PackedStringArray("player_inventory", "inventory_grid_view")]
 process_mode = 3
 visible = false
 layout_mode = 3
@@ -1123,7 +1124,7 @@ script = ExtResource("49_pause_menu")
 player_inventory = NodePath("../../PlayerInventory")
 inventory_grid_view = NodePath("InventoryGridView")
 
-[node name="Overlay" type="ColorRect" parent="PauseMenuLayer/PauseMenu"]
+[node name="Overlay" type="ColorRect" parent="PauseMenuLayer/PauseMenu" unique_id=917141489]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1132,7 +1133,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.03137255, 0.03529412, 0.039215688, 0.94)
 
-[node name="Heading" type="Label" parent="PauseMenuLayer/PauseMenu"]
+[node name="Heading" type="Label" parent="PauseMenuLayer/PauseMenu" unique_id=1422825471]
 layout_mode = 0
 offset_top = 18.0
 offset_right = 320.0
@@ -1140,8 +1141,8 @@ offset_bottom = 36.0
 text = "Pause Menu"
 horizontal_alignment = 1
 
-[node name="InventoryGridView" type="Control" parent="PauseMenuLayer/PauseMenu"]
-layout_mode = 0
+[node name="InventoryGridView" type="Control" parent="PauseMenuLayer/PauseMenu" unique_id=716203011]
+anchors_preset = 0
 offset_left = 84.0
 offset_top = 56.0
 offset_right = 236.0

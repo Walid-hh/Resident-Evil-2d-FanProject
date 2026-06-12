@@ -7,3 +7,5 @@ class_name WeaponConfig extends Resource
 @export var hud_ui_texture: Texture2D
 @export var hud_ui_no_focus_texture: Texture2D
 @export var unlocked_by_default := false
+@export var ammo_item_key: StringName = &""
+@export_range(1, 999, 1) var ammo_per_shot := 1

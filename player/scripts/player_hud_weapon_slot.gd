@@ -2,9 +2,12 @@ extends TextureRect
 
 @onready var weapon_icon: TextureRect = %WeaponIcon
 @onready var focus_indicator: TextureRect = %FocusIndicator
+@onready var ammo_label: Label = %AmmoLabel
 
 var _weapon_config: WeaponConfig
 var _is_active := false
+var _ammo_quantity := -1
+var _ammo_infinite := true
 
 var frame_focus_texture := preload("uid://binn02ettnoyj")
 var frame_no_focus_texture := preload("uid://dohgkvavumgpc")
@@ -28,6 +31,13 @@ func set_active(active: bool) -> void:
 		_apply_active_state()
 
 
+func set_ammo_quantity(quantity: int, infinite := false) -> void:
+	_ammo_quantity = quantity
+	_ammo_infinite = infinite
+	if is_node_ready():
+		_apply_ammo_quantity()
+
+
 func get_weapon_config() -> WeaponConfig:
 	return _weapon_config
 
@@ -46,6 +56,7 @@ func _apply_active_state() -> void:
 
 	if focus_indicator != null:
 		focus_indicator.visible = _is_active
+	_apply_ammo_quantity()
 
 
 func _get_weapon_icon_texture() -> Texture2D:
@@ -55,3 +66,10 @@ func _get_weapon_icon_texture() -> Texture2D:
 		return _weapon_config.hud_ui_texture
 
 	return _weapon_config.hud_ui_no_focus_texture
+
+
+func _apply_ammo_quantity() -> void:
+	if ammo_label == null:
+		return
+
+	ammo_label.text = "∞" if _ammo_infinite else str(maxi(_ammo_quantity, 0))

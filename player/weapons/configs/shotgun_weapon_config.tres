@@ -13,3 +13,4 @@ fire_rate = 0.75
 hud_ui_texture = ExtResource("3_shotgun_hud")
 hud_ui_no_focus_texture = ExtResource("4_shotgun_hud_no_focus")
 unlocked_by_default = true
+ammo_item_key = &"shotgun_ammo"

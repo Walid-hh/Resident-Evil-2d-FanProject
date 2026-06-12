@@ -11,6 +11,7 @@ func test_handgun_weapon_config_resource_is_complete() -> void:
 	assert_not_null(config.hud_ui_no_focus_texture)
 	assert_eq(config.fire_rate, 0.133)
 	assert_true(config.unlocked_by_default)
+	assert_eq(config.ammo_item_key, &"")
 
 
 func test_shotgun_weapon_config_resource_is_complete() -> void:
@@ -23,3 +24,5 @@ func test_shotgun_weapon_config_resource_is_complete() -> void:
 	assert_not_null(config.hud_ui_no_focus_texture)
 	assert_eq(config.fire_rate, 0.75)
 	assert_true(config.unlocked_by_default)
+	assert_eq(config.ammo_item_key, &"shotgun_ammo")
+	assert_eq(config.ammo_per_shot, 1)

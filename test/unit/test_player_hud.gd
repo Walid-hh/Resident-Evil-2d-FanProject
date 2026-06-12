@@ -50,6 +50,24 @@ func test_set_active_weapon_config_highlights_only_matching_slot() -> void:
 	assert_true(second_slot.focus_indicator.visible)
 
 
+func test_set_weapon_ammo_counts_updates_slot_labels() -> void:
+	var handgun := _make_config(&"handgun")
+	var shotgun := _make_config(&"shotgun")
+	shotgun.ammo_item_key = &"shotgun_ammo"
+
+	_hud.set_weapon_slots([handgun, shotgun])
+	_hud.set_weapon_ammo_counts({
+		&"handgun": -1,
+		&"shotgun": 7,
+	})
+
+	var first_slot = _hud.weapon_slots_container.get_child(0)
+	var second_slot = _hud.weapon_slots_container.get_child(1)
+
+	assert_eq(first_slot.ammo_label.text, "∞")
+	assert_eq(second_slot.ammo_label.text, "7")
+
+
 func test_set_weapon_slots_rebuilds_existing_slots() -> void:
 	var handgun := _make_config(&"handgun")
 	var shotgun := _make_config(&"shotgun")

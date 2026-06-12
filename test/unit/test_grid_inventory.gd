@@ -25,6 +25,17 @@ func test_add_item_at_places_valid_footprint_within_bounds() -> void:
 	assert_eq(_inventory.get_occupied_cells(result.item.instance_id), [Vector2i(1, 1), Vector2i(2, 1)])
 
 
+func test_add_item_at_assigns_stack_quantity() -> void:
+	var config := _make_config(&"ammo", 2, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+
+	var result = _inventory.add_item_at(config, Vector2i(0, 0), false, 12)
+
+	assert_true(result.success)
+	assert_eq(result.item.quantity, 12)
+
+
 func test_add_item_at_rejects_out_of_bounds_footprint() -> void:
 	var config := _make_config(&"shotgun", 3, 1)
 
@@ -58,6 +69,63 @@ func test_add_item_first_fit_chooses_earliest_available_top_left_cell() -> void:
 	assert_eq(result.item.origin, Vector2i(2, 0))
 
 
+func test_add_item_stack_merges_partial_stacks_before_creating_new_stack() -> void:
+	var config := _make_config(&"shotgun_ammo", 2, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+	var partial = _inventory.add_item_at(config, Vector2i(0, 0), false, 18)
+
+	var result = _inventory.add_item_stack(config, 5)
+
+	assert_true(result.success)
+	assert_eq(result.leftover_quantity, 0)
+	assert_eq(partial.item.quantity, 20)
+	assert_eq(_inventory.get_items().size(), 2)
+	assert_eq(_inventory.get_total_quantity(&"shotgun_ammo"), 23)
+
+
+func test_add_item_stack_reports_leftover_when_space_runs_out() -> void:
+	var config := _make_config(&"shotgun_ammo", 2, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+	_inventory.columns = 2
+	_inventory.rows = 1
+
+	var result = _inventory.add_item_stack(config, 25)
+
+	assert_true(result.success)
+	assert_eq(result.leftover_quantity, 5)
+	assert_eq(_inventory.get_total_quantity(&"shotgun_ammo"), 20)
+
+
+func test_consume_item_quantity_spends_lowest_count_stack_first_and_removes_empty_stack() -> void:
+	var config := _make_config(&"shotgun_ammo", 1, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+	var high = _inventory.add_item_at(config, Vector2i(0, 0), false, 10)
+	var low = _inventory.add_item_at(config, Vector2i(1, 0), false, 3)
+
+	var consumed := _inventory.consume_item_quantity(&"shotgun_ammo", 4)
+
+	assert_true(consumed)
+	assert_null(_inventory.get_item(low.item.instance_id))
+	assert_eq(high.item.quantity, 9)
+	assert_eq(_inventory.get_total_quantity(&"shotgun_ammo"), 9)
+
+
+func test_consume_item_quantity_rejects_insufficient_quantity_without_mutating() -> void:
+	var config := _make_config(&"shotgun_ammo", 1, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+	var stack = _inventory.add_item_at(config, Vector2i(0, 0), false, 2)
+
+	var consumed := _inventory.consume_item_quantity(&"shotgun_ammo", 3)
+
+	assert_false(consumed)
+	assert_eq(stack.item.quantity, 2)
+	assert_eq(_inventory.get_total_quantity(&"shotgun_ammo"), 2)
+
+
 func test_remove_item_frees_occupied_cells() -> void:
 	var config := _make_config(&"herb", 1, 1)
 	var added = _inventory.add_item_at(config, Vector2i(0, 0))
@@ -80,6 +148,18 @@ func test_move_item_updates_origin_and_occupied_cells() -> void:
 	assert_false(_inventory.is_cell_occupied(Vector2i(0, 0)))
 	assert_true(_inventory.is_cell_occupied(Vector2i(1, 1)))
 	assert_true(_inventory.is_cell_occupied(Vector2i(2, 1)))
+
+
+func test_move_item_can_update_rotation_atomically() -> void:
+	var config := _make_config(&"shotgun", 3, 1)
+	var added = _inventory.add_item_at(config, Vector2i(0, 0))
+
+	var result = _inventory.move_item_with_rotation(added.item.instance_id, Vector2i(2, 0), true)
+
+	assert_true(result.success)
+	assert_eq(added.item.origin, Vector2i(2, 0))
+	assert_true(added.item.rotated)
+	assert_eq(_inventory.get_occupied_cells(added.item.instance_id), [Vector2i(2, 0), Vector2i(2, 1), Vector2i(2, 2)])
 
 
 func test_move_item_rejects_invalid_target_without_mutating_state() -> void:
@@ -177,6 +257,19 @@ func test_inventory_changed_emits_only_after_successful_mutations() -> void:
 	_inventory.remove_item(added.item.instance_id)
 
 	assert_signal_emit_count(_inventory, "inventory_changed", 4)
+
+
+func test_inventory_changed_emits_for_stack_quantity_mutations() -> void:
+	var config := _make_config(&"shotgun_ammo", 1, 1)
+	config.stackable = true
+	config.max_stack_quantity = 20
+	watch_signals(_inventory)
+
+	_inventory.add_item_stack(config, 5)
+	_inventory.add_item_stack(config, 2)
+	_inventory.consume_item_quantity(&"shotgun_ammo", 7)
+
+	assert_signal_emit_count(_inventory, "inventory_changed", 3)
 
 
 func test_invalid_inventory_size_causes_placement_checks_to_fail() -> void:

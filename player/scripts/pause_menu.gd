@@ -28,6 +28,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_move_inventory_cursor(Vector2i.UP)
 	elif event.is_action_pressed("down"):
 		_move_inventory_cursor(Vector2i.DOWN)
+	elif event.is_action_pressed("inventory_pick_place"):
+		_pick_or_place_inventory_item()
+	elif event.is_action_pressed("inventory_rotate_item"):
+		_rotate_inventory_item()
 
 
 func toggle_open() -> void:
@@ -35,6 +39,8 @@ func toggle_open() -> void:
 
 
 func set_open(open: bool) -> void:
+	if !open and inventory_grid_view != null:
+		inventory_grid_view.cancel_held_item()
 	visible = open
 	get_tree().paused = open
 	if open and inventory_grid_view != null:
@@ -44,4 +50,16 @@ func set_open(open: bool) -> void:
 func _move_inventory_cursor(direction: Vector2i) -> void:
 	if inventory_grid_view != null:
 		inventory_grid_view.move_cursor(direction)
+	get_viewport().set_input_as_handled()
+
+
+func _pick_or_place_inventory_item() -> void:
+	if inventory_grid_view != null:
+		inventory_grid_view.pick_or_place_held_item()
+	get_viewport().set_input_as_handled()
+
+
+func _rotate_inventory_item() -> void:
+	if inventory_grid_view != null:
+		inventory_grid_view.rotate_held_item()
 	get_viewport().set_input_as_handled()

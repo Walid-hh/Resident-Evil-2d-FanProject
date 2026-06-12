@@ -4,18 +4,21 @@ var instance_id: StringName
 var config: Resource
 var origin := Vector2i.ZERO
 var rotated := false
+var quantity := 1
 
 
 func _init(
 	p_instance_id: StringName = &"",
 	p_config: Resource = null,
 	p_origin := Vector2i.ZERO,
-	p_rotated := false
+	p_rotated := false,
+	p_quantity := 1
 ) -> void:
 	instance_id = p_instance_id
 	config = p_config
 	origin = p_origin
 	rotated = p_rotated
+	quantity = maxi(p_quantity, 1)
 
 
 func get_size() -> Vector2i:

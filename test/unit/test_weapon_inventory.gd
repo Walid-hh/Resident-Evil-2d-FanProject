@@ -15,14 +15,17 @@ class TestWeapon:
 var _anchor: Marker2D
 var _weapon: TestWeapon
 var _inventory: WeaponInventory
+var _player_inventory: PlayerInventory
 
 
 func before_each() -> void:
 	_anchor = add_child_autofree(Marker2D.new())
 	_weapon = add_child_autofree(TestWeapon.new())
+	_player_inventory = add_child_autofree(PlayerInventory.new())
 	_inventory = add_child_autofree(WeaponInventory.new())
 	_inventory.anchor = _anchor
 	_inventory.weapon = _weapon
+	_inventory.player_inventory = _player_inventory
 
 
 func test_initialize_selects_first_unlocked_config() -> void:
@@ -100,8 +103,9 @@ func test_physics_update_fires_only_active_config() -> void:
 	_inventory.weapon_configs = [first, second]
 	_inventory.initialize()
 
-	_inventory.physics_update(0.1, true, Vector2.RIGHT, 1.0)
+	var shot_fired := _inventory.physics_update(0.1, true, Vector2.RIGHT, 1.0)
 
+	assert_true(shot_fired)
 	assert_eq(_weapon.get_weapon_config(), first)
 	assert_eq(_weapon.fired_directions, [Vector2.RIGHT])
 	assert_eq(_inventory.get_active_weapon_config(), first)
@@ -124,6 +128,46 @@ func test_cooldown_is_preserved_per_weapon_key_when_cycling() -> void:
 	_inventory.physics_update(0.5, true, Vector2.RIGHT, 1.0)
 
 	assert_eq(_weapon.fired_directions.size(), 3, "Handgun should fire after its preserved cooldown completes.")
+
+
+func test_ammo_backed_weapon_consumes_ammo_when_firing() -> void:
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [shotgun]
+	_inventory.initialize()
+
+	var shot_fired := _inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0)
+
+	assert_true(shot_fired)
+	assert_eq(_weapon.fired_directions.size(), 1)
+	assert_eq(_player_inventory.get_item_quantity(&"shotgun_ammo"), 9)
+
+
+func test_ammo_backed_weapon_does_not_fire_without_ammo() -> void:
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"missing_ammo"
+	_inventory.weapon_configs = [shotgun]
+	_inventory.initialize()
+
+	var shot_fired := _inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0)
+
+	assert_false(shot_fired)
+	assert_true(_weapon.fired_directions.is_empty())
+
+
+func test_cooldown_blocked_fire_does_not_consume_ammo_or_report_shot() -> void:
+	var shotgun := _make_config(&"shotgun", true, 1.0)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [shotgun]
+	_inventory.initialize()
+
+	assert_true(_inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0))
+	var ammo_after_first_shot := _player_inventory.get_item_quantity(&"shotgun_ammo")
+	var shot_fired := _inventory.physics_update(0.5, true, Vector2.RIGHT, 1.0)
+
+	assert_false(shot_fired)
+	assert_eq(_weapon.fired_directions.size(), 1)
+	assert_eq(_player_inventory.get_item_quantity(&"shotgun_ammo"), ammo_after_first_shot)
 
 
 func _make_config(weapon_key: StringName, unlocked: bool, fire_rate: float = 0.0) -> WeaponConfig:
