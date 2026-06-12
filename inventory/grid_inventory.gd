@@ -2,9 +2,9 @@ class_name GridInventory extends Node
 
 signal inventory_changed
 
-const InventoryItemScript := preload("res://inventory/inventory_item.gd")
-const InventoryPlacementResultScript := preload("res://inventory/inventory_placement_result.gd")
-const ItemConfigScript := preload("res://inventory/item_config.gd")
+const InventoryItemScript := preload("uid://cq2loov70akoe")
+const InventoryPlacementResultScript := preload("uid://iltn4hw7jlhj")
+const ItemConfigScript := preload("uid://b2dfkpbc1vskx")
 
 @export_range(1, 64, 1) var columns := 8
 @export_range(1, 64, 1) var rows := 4
@@ -93,6 +93,14 @@ func get_items() -> Array:
 
 func get_item(instance_id: StringName) -> RefCounted:
 	return _items.get(instance_id) as RefCounted
+
+
+func get_item_at_cell(cell: Vector2i) -> RefCounted:
+	var instance_id := _occupied_cells.get(cell, &"") as StringName
+	if instance_id == &"":
+		return null
+
+	return get_item(instance_id)
 
 
 func get_occupied_cells(instance_id: StringName) -> Array[Vector2i]:

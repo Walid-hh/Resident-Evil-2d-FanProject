@@ -1,6 +1,6 @@
 class_name PlayerInventory extends Node
 
-const GridInventoryScript: GDScript = preload("res://inventory/grid_inventory.gd")
+const GridInventoryScript: GDScript = preload("uid://bjt8wqgl14qn6")
 const GREEN_HERB_CONFIG: ItemConfig = preload("res://inventory/items/green_herb.tres")
 const HANDGUN_AMMO_CONFIG: ItemConfig = preload("res://inventory/items/handgun_ammo.tres")
 const FIRST_AID_SPRAY_CONFIG: ItemConfig = preload("res://inventory/items/first_aid_spray.tres")

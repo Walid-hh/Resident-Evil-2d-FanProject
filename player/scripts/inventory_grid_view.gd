@@ -11,9 +11,12 @@ class_name InventoryGridView extends Control
 @export var cell_gap: int = 1
 @export var cell_color: Color = Color(0.12, 0.13, 0.13, 1.0)
 @export var item_color: Color = Color(0.32, 0.39, 0.36, 1.0)
+@export var cursor_color: Color = Color(0.92, 0.78, 0.37, 1.0)
 
 var _cell_nodes: Array[ColorRect] = []
 var _item_tile_nodes: Array[Control] = []
+var _cursor_cell := Vector2i.ZERO
+var _cursor_node: Panel
 
 
 func _ready() -> void:
@@ -33,10 +36,38 @@ func refresh() -> void:
 	size = custom_minimum_size
 	_build_cells()
 	_build_item_tiles()
+	_build_cursor()
 
 
 func get_item_tiles() -> Array[Control]:
 	return _item_tile_nodes.duplicate()
+
+
+func get_cursor_cell() -> Vector2i:
+	return _cursor_cell
+
+
+func get_selected_item() -> InventoryItem:
+	if grid_inventory == null:
+		return null
+
+	return grid_inventory.get_item_at_cell(_cursor_cell) as InventoryItem
+
+
+func reset_cursor() -> void:
+	_cursor_cell = Vector2i.ZERO
+	_update_cursor_visual()
+
+
+func move_cursor(direction: Vector2i) -> void:
+	if grid_inventory == null or grid_inventory.columns <= 0 or grid_inventory.rows <= 0:
+		return
+	if direction == Vector2i.ZERO:
+		return
+
+	_cursor_cell.x = wrapi(_cursor_cell.x + signi(direction.x), 0, grid_inventory.columns)
+	_cursor_cell.y = wrapi(_cursor_cell.y + signi(direction.y), 0, grid_inventory.rows)
+	_update_cursor_visual()
 
 
 func _build_cells() -> void:
@@ -89,6 +120,40 @@ func _build_item_tiles() -> void:
 		tile.add_child(label)
 
 
+func _build_cursor() -> void:
+	_cursor_node = Panel.new()
+	_cursor_node.name = "InventoryCursor"
+	_cursor_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cursor_node.size = cell_size
+
+	var style_box := StyleBoxFlat.new()
+	style_box.bg_color = Color.TRANSPARENT
+	style_box.border_width_left = 1
+	style_box.border_width_top = 1
+	style_box.border_width_right = 1
+	style_box.border_width_bottom = 1
+	style_box.border_color = cursor_color
+	style_box.anti_aliasing = false
+	_cursor_node.add_theme_stylebox_override("panel", style_box)
+
+	add_child(_cursor_node)
+	_update_cursor_visual()
+
+
+func _update_cursor_visual() -> void:
+	if _cursor_node == null or grid_inventory == null:
+		return
+	if grid_inventory.columns <= 0 or grid_inventory.rows <= 0:
+		_cursor_node.visible = false
+		return
+
+	_cursor_node.visible = true
+	_cursor_cell.x = wrapi(_cursor_cell.x, 0, grid_inventory.columns)
+	_cursor_cell.y = wrapi(_cursor_cell.y, 0, grid_inventory.rows)
+	_cursor_node.position = _cell_position(_cursor_cell)
+	_cursor_node.size = cell_size
+
+
 func _clear_dynamic_nodes() -> void:
 	for node: ColorRect in _cell_nodes:
 		if node != null:
@@ -98,6 +163,10 @@ func _clear_dynamic_nodes() -> void:
 		if node != null:
 			remove_child(node)
 			node.queue_free()
+	if _cursor_node != null:
+		remove_child(_cursor_node)
+		_cursor_node.queue_free()
+		_cursor_node = null
 
 	_cell_nodes.clear()
 	_item_tile_nodes.clear()

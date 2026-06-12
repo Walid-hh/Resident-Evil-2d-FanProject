@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://player/scripts/player_hud_weapon_slot.gd" id="1_slot_script"]
+[ext_resource type="Script" uid="uid://dh0kcwe56xj57" path="res://player/scripts/player_hud_weapon_slot.gd" id="1_slot_script"]
 [ext_resource type="Texture2D" uid="uid://dohgkvavumgpc" path="res://player/playerAssets/playerHUD/GunTextureNoFocus.png" id="2_slot_no_focus"]
 [ext_resource type="Texture2D" uid="uid://c4784wl774y6q" path="res://player/playerAssets/playerHUD/GunUIFocusIndicator.png" id="4_focus_indicator"]
 

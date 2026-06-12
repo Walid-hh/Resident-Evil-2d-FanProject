@@ -41,10 +41,10 @@
 [ext_resource type="Resource" uid="uid://b72yfv3kguuf7" path="res://player/weapons/configs/handgun_weapon_config.tres" id="44_handgun_config"]
 [ext_resource type="Resource" uid="uid://cshbo77h5lyrh" path="res://player/weapons/configs/shotgun_weapon_config.tres" id="45_shotgun_config"]
 [ext_resource type="Script" uid="uid://conmwp4igpvm1" path="res://player/camera/player_camera.gd" id="46_camera"]
-[ext_resource type="Script" path="res://player/scripts/player_inventory.gd" id="47_player_inventory"]
-[ext_resource type="Script" path="res://inventory/grid_inventory.gd" id="48_grid_inventory"]
-[ext_resource type="Script" path="res://player/scripts/pause_menu.gd" id="49_pause_menu"]
-[ext_resource type="Script" path="res://player/scripts/inventory_grid_view.gd" id="50_inventory_grid_view"]
+[ext_resource type="Script" uid="uid://ck18g6v74njn3" path="res://player/scripts/player_inventory.gd" id="47_player_inventory"]
+[ext_resource type="Script" uid="uid://bjt8wqgl14qn6" path="res://inventory/grid_inventory.gd" id="48_grid_inventory"]
+[ext_resource type="Script" uid="uid://d2se3nxtn8tew" path="res://player/scripts/pause_menu.gd" id="49_pause_menu"]
+[ext_resource type="Script" uid="uid://cq7dw8ugxxbit" path="res://player/scripts/inventory_grid_view.gd" id="50_inventory_grid_view"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_a2xo5"]
 a = Vector2(0, -90)

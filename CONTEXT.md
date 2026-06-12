@@ -69,6 +69,10 @@ _Code_: `inventory/grid_inventory.gd`
 **Cell**:
 One addressable position in a `GridInventory`. Cells use `Vector2i` coordinates with `(0, 0)` as the top-left cell.
 
+**Inventory Cursor**:
+The Pause Menu selector for the player inventory grid. It points at one `GridInventory` cell, moves with directional input while the Pause Menu is open, wraps at grid edges, and can identify the `InventoryItem` occupying its current Cell.
+_Code_: `player/scripts/inventory_grid_view.gd`
+
 **ItemConfig**:
 A reusable item definition. It stores shared item data such as canonical item key, display name, rectangular footprint, rotation permission, and optional UI icon.
 _Code_: `inventory/item_config.gd`
@@ -167,9 +171,9 @@ Important files:
 
 ### Grid Inventory
 
-`GridInventory` is the core model for Resident Evil 4-style spatial inventory behavior. It is reusable gameplay infrastructure, not player-only UI state. The v1 system supports rectangular item footprints, per-item rotation permission, explicit placement, first-fit placement, moving, rotating, removing, occupancy queries, and result objects with failure reasons.
+`GridInventory` is the core model for Resident Evil 4-style spatial inventory behavior. It is reusable gameplay infrastructure, not player-only UI state. The v1 system supports rectangular item footprints, per-item rotation permission, explicit placement, first-fit placement, moving, rotating, removing, occupancy queries, item lookup by Cell, and result objects with failure reasons.
 
-The player currently has a read-only Pause Menu inventory screen that renders the player-owned `GridInventory`. There is no drag and drop, stacking, quantities, pickup integration, save/load format, or weapon availability bridge yet. `WeaponInventory` remains the current weapon loadout selector and cooldown owner.
+The player currently has a read-only Pause Menu inventory screen that renders the player-owned `GridInventory` and an Inventory Cursor. There is no item movement through the UI, drag and drop, stacking, quantities, pickup integration, save/load format, or weapon availability bridge yet. `WeaponInventory` remains the current weapon loadout selector and cooldown owner.
 
 Important files:
 - `inventory/grid_inventory.gd`
@@ -217,7 +221,7 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 - The player scene's Camera node includes two boundary `StaticBody2D` nodes with constrained collision layers and masks to keep the Player from leaving the visible frame.
 - The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
-- The Pause Menu inventory screen is read-only. It does not yet have drag/drop interaction, stacking, pickup integration, save/load support, or weapon availability integration.
+- The Pause Menu inventory screen is read-only beyond Inventory Cursor navigation. It does not yet have item movement through the UI, drag/drop interaction, stacking, pickup integration, save/load support, or weapon availability integration.
 
 ## Contributor Notes
 

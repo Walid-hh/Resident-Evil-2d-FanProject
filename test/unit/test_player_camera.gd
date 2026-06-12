@@ -20,9 +20,9 @@ class MockCameraTarget:
 
 
 func before_each() -> void:
-	PlayerCameraScript = load("res://player/camera/player_camera.gd")
-	CameraStopAreaScript = load("res://levels/camera_stop_area.gd")
-	CameraBoundsScript = load("res://levels/camera_bounds.gd")
+	PlayerCameraScript = load("uid://conmwp4igpvm1")
+	CameraStopAreaScript = load("uid://c2i2as46ukqhi")
+	CameraBoundsScript = load("uid://pdv6a030eesg")
 	TestLevelScene = load("res://levels/test_level.tscn")
 	PlayerScene = load("res://player/player.tscn")
 	_player = add_child_autofree(CharacterBody2D.new())

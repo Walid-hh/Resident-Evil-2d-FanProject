@@ -1,8 +1,8 @@
 extends GutTest
 
-const GridInventoryScript := preload("res://inventory/grid_inventory.gd")
-const InventoryPlacementResultScript := preload("res://inventory/inventory_placement_result.gd")
-const ItemConfigScript := preload("res://inventory/item_config.gd")
+const GridInventoryScript := preload("uid://bjt8wqgl14qn6")
+const InventoryPlacementResultScript := preload("uid://iltn4hw7jlhj")
+const ItemConfigScript := preload("uid://b2dfkpbc1vskx")
 
 var _inventory: Node
 
@@ -143,6 +143,25 @@ func test_duplicate_configs_get_distinct_instance_ids() -> void:
 	assert_ne(first.item.instance_id, second.item.instance_id)
 	assert_eq(_inventory.get_item(first.item.instance_id), first.item)
 	assert_eq(_inventory.get_item(second.item.instance_id), second.item)
+
+
+func test_get_item_at_cell_returns_item_for_any_occupied_footprint_cell() -> void:
+	var config := _make_config(&"shotgun", 2, 2)
+	var added = _inventory.add_item_at(config, Vector2i(1, 0))
+
+	assert_eq(_inventory.get_item_at_cell(Vector2i(1, 0)), added.item)
+	assert_eq(_inventory.get_item_at_cell(Vector2i(2, 0)), added.item)
+	assert_eq(_inventory.get_item_at_cell(Vector2i(1, 1)), added.item)
+	assert_eq(_inventory.get_item_at_cell(Vector2i(2, 1)), added.item)
+
+
+func test_get_item_at_cell_returns_null_for_empty_and_out_of_bounds_cells() -> void:
+	var config := _make_config(&"herb", 1, 1)
+	_inventory.add_item_at(config, Vector2i(0, 0))
+
+	assert_null(_inventory.get_item_at_cell(Vector2i(1, 0)))
+	assert_null(_inventory.get_item_at_cell(Vector2i(-1, 0)))
+	assert_null(_inventory.get_item_at_cell(Vector2i(4, 0)))
 
 
 func test_inventory_changed_emits_only_after_successful_mutations() -> void:
