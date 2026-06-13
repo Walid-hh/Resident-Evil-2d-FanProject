@@ -32,8 +32,10 @@ func before_each() -> void:
 	_camera.viewport_size = Vector2(320, 180)
 	_camera.player_screen_x = 104.0
 	_camera.left_edge_margin = 8.0
-	_camera.camera_tween_duration = 0.0
-	_camera.camera_tween_speed_scale = 1.0
+	_camera.horizontal_camera_tween_duration = 0.0
+	_camera.horizontal_camera_tween_speed_scale = 1.0
+	_camera.vertical_camera_tween_duration = 0.0
+	_camera.vertical_camera_tween_speed_scale = 1.0
 	_camera.lookahead_distance = 0.0
 	_camera.configure_bounds(Rect2(-120, -200, 2000, 720))
 	_player.global_position = Vector2(40, 130)
@@ -84,10 +86,10 @@ func test_camera_holds_vertical_position_until_grounded() -> void:
 
 
 func test_camera_uses_tween_easing_for_motion() -> void:
-	_camera.camera_tween_duration = 0.5
-	_camera.camera_tween_speed_scale = 1.0
-	_camera.camera_tween_transition = Tween.TRANS_QUAD
-	_camera.camera_tween_ease = Tween.EASE_OUT
+	_camera.horizontal_camera_tween_duration = 0.5
+	_camera.horizontal_camera_tween_speed_scale = 1.0
+	_camera.horizontal_camera_tween_transition = Tween.TRANS_QUAD
+	_camera.horizontal_camera_tween_ease = Tween.EASE_OUT
 	_player.global_position.x = 220.25
 
 	_camera.physics_update(0.25)
@@ -102,6 +104,101 @@ func test_camera_uses_tween_easing_for_motion() -> void:
 	))
 
 	assert_eq(_camera.get_target_camera_position().x, expected_x)
+
+
+func test_horizontal_camera_tween_can_use_linear_halfway_motion() -> void:
+	_camera.horizontal_camera_tween_duration = 0.5
+	_camera.horizontal_camera_tween_transition = Tween.TRANS_LINEAR
+	_camera.horizontal_camera_tween_ease = Tween.EASE_OUT
+	_player.global_position.x = 220.25
+
+	_camera.physics_update(0.25)
+
+	assert_eq(_camera.get_target_camera_position().x, 186.0)
+
+
+func test_camera_axes_can_use_different_tween_durations() -> void:
+	var floor_target: MockCameraTarget = add_child_autofree(MockCameraTarget.new())
+	floor_target.global_position = Vector2(40, 130)
+	floor_target.floor_state = true
+	_camera.target = floor_target
+	_camera.horizontal_camera_tween_duration = 0.2
+	_camera.horizontal_camera_tween_transition = Tween.TRANS_LINEAR
+	_camera.vertical_camera_tween_duration = 0.5
+	_camera.vertical_camera_tween_transition = Tween.TRANS_LINEAR
+	_camera.snap_to_target()
+
+	floor_target.global_position = Vector2(220, 50)
+	_camera.physics_update(0.2)
+
+	assert_eq(_camera.get_target_camera_position().x, 276.0)
+	assert_eq(_camera.get_target_camera_position().y, 50.0)
+
+
+func test_disabled_horizontal_duration_snaps_without_disabling_vertical_tween() -> void:
+	var floor_target: MockCameraTarget = add_child_autofree(MockCameraTarget.new())
+	floor_target.global_position = Vector2(40, 130)
+	floor_target.floor_state = true
+	_camera.target = floor_target
+	_camera.horizontal_camera_tween_duration = 0.0
+	_camera.vertical_camera_tween_duration = 0.5
+	_camera.vertical_camera_tween_transition = Tween.TRANS_LINEAR
+	_camera.snap_to_target()
+
+	floor_target.global_position = Vector2(220, 50)
+	_camera.physics_update(0.25)
+
+	assert_eq(_camera.get_target_camera_position().x, 276.0)
+	assert_eq(_camera.get_target_camera_position().y, 42.0)
+
+
+func test_horizontal_target_changes_do_not_restart_vertical_tween() -> void:
+	var floor_target: MockCameraTarget = add_child_autofree(MockCameraTarget.new())
+	floor_target.global_position = Vector2(40, 130)
+	floor_target.floor_state = true
+	_camera.target = floor_target
+	_camera.horizontal_camera_tween_duration = 0.5
+	_camera.horizontal_camera_tween_speed_scale = 1.0
+	_camera.horizontal_camera_tween_transition = Tween.TRANS_QUAD
+	_camera.horizontal_camera_tween_ease = Tween.EASE_OUT
+	_camera.vertical_camera_tween_duration = 0.5
+	_camera.vertical_camera_tween_speed_scale = 1.0
+	_camera.vertical_camera_tween_transition = Tween.TRANS_QUAD
+	_camera.vertical_camera_tween_ease = Tween.EASE_OUT
+	_camera.snap_to_target()
+
+	floor_target.global_position.y = 50.0
+	for index in range(5):
+		floor_target.global_position.x = 220.0 + index * 20.0
+		_camera.physics_update(0.1)
+
+	assert_eq(_camera.get_target_camera_position().y, 2.0)
+
+
+func test_vertical_tween_continues_after_x_target_changes() -> void:
+	var floor_target: MockCameraTarget = add_child_autofree(MockCameraTarget.new())
+	floor_target.global_position = Vector2(40, 130)
+	floor_target.floor_state = true
+	_camera.target = floor_target
+	_camera.horizontal_camera_tween_duration = 0.5
+	_camera.horizontal_camera_tween_speed_scale = 1.0
+	_camera.horizontal_camera_tween_transition = Tween.TRANS_QUAD
+	_camera.horizontal_camera_tween_ease = Tween.EASE_OUT
+	_camera.vertical_camera_tween_duration = 0.5
+	_camera.vertical_camera_tween_speed_scale = 1.0
+	_camera.vertical_camera_tween_transition = Tween.TRANS_QUAD
+	_camera.vertical_camera_tween_ease = Tween.EASE_OUT
+	_camera.snap_to_target()
+
+	floor_target.global_position = Vector2(220, 50)
+	_camera.physics_update(0.25)
+	var partial_y: float = _camera.get_target_camera_position().y
+
+	floor_target.global_position.x = 260.0
+	_camera.physics_update(0.25)
+
+	assert_gt(partial_y, 2.0)
+	assert_eq(_camera.get_target_camera_position().y, 2.0)
 
 
 func test_camera_update_does_not_move_player_left_of_visible_frame() -> void:

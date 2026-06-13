@@ -11,10 +11,14 @@ const CAMERA_STOP_AREA_GROUP := "camera_stop_area"
 @export var vertical_offset := -48.0
 @export var lookahead_distance := 12.0
 @export var lookahead_speed := 8.0
-@export var camera_tween_duration := 0.18
-@export var camera_tween_speed_scale := 1.0
-@export var camera_tween_transition := Tween.TRANS_SINE
-@export var camera_tween_ease := Tween.EASE_OUT
+@export var horizontal_camera_tween_duration := 0.18
+@export var horizontal_camera_tween_speed_scale := 1.0
+@export var horizontal_camera_tween_transition := Tween.TRANS_LINEAR
+@export var horizontal_camera_tween_ease := Tween.EASE_OUT
+@export var vertical_camera_tween_duration := 0.5
+@export var vertical_camera_tween_speed_scale := 1.0
+@export var vertical_camera_tween_transition := Tween.TRANS_SINE
+@export var vertical_camera_tween_ease := Tween.EASE_OUT
 
 var camera_bounds := Rect2(-120, -16, 2000, 180)
 var target_camera_position := Vector2.ZERO
@@ -22,9 +26,12 @@ var _lookahead_x := 0.0
 var _active_stop_positions: Array[float] = []
 var _grounded_camera_y := 0.0
 var _has_grounded_camera_y := false
-var _camera_motion_start_position := Vector2.ZERO
-var _camera_motion_target_position := Vector2.ZERO
-var _camera_motion_elapsed := 0.0
+var _camera_motion_start_x := 0.0
+var _camera_motion_target_x := 0.0
+var _camera_motion_elapsed_x := 0.0
+var _camera_motion_start_y := 0.0
+var _camera_motion_target_y := 0.0
+var _camera_motion_elapsed_y := 0.0
 
 
 func _ready() -> void:
@@ -192,34 +199,54 @@ func _snap_camera_position(position: Vector2) -> Vector2:
 
 
 func _advance_camera_motion(desired_position: Vector2, delta: float) -> void:
-	var tween_duration := _get_camera_tween_duration()
-	if tween_duration <= 0.0:
-		_apply_hard_camera_target(desired_position)
-		return
+	var horizontal_duration := _get_horizontal_camera_tween_duration()
+	var vertical_duration := _get_vertical_camera_tween_duration()
 
-	if desired_position != _camera_motion_target_position:
-		_camera_motion_start_position = target_camera_position
-		_camera_motion_target_position = desired_position
-		_camera_motion_elapsed = 0.0
+	if desired_position.x != _camera_motion_target_x:
+		_camera_motion_start_x = target_camera_position.x
+		_camera_motion_target_x = desired_position.x
+		_camera_motion_elapsed_x = 0.0
 
-	_camera_motion_elapsed = minf(_camera_motion_elapsed + delta, tween_duration)
-	_apply_camera_position(Vector2(
-		Tween.interpolate_value(
-			_camera_motion_start_position.x,
-			_camera_motion_target_position.x - _camera_motion_start_position.x,
-			_camera_motion_elapsed,
-			tween_duration,
-			camera_tween_transition,
-			camera_tween_ease
-		),
-		Tween.interpolate_value(
-			_camera_motion_start_position.y,
-			_camera_motion_target_position.y - _camera_motion_start_position.y,
-			_camera_motion_elapsed,
-			tween_duration,
-			camera_tween_transition,
-			camera_tween_ease
+	if desired_position.y != _camera_motion_target_y:
+		_camera_motion_start_y = target_camera_position.y
+		_camera_motion_target_y = desired_position.y
+		_camera_motion_elapsed_y = 0.0
+
+	var next_x := desired_position.x
+	if horizontal_duration > 0.0:
+		_camera_motion_elapsed_x = minf(_camera_motion_elapsed_x + delta, horizontal_duration)
+		next_x = _interpolate_camera_axis(
+			_camera_motion_start_x,
+			_camera_motion_target_x,
+			_camera_motion_elapsed_x,
+			horizontal_duration,
+			horizontal_camera_tween_transition,
+			horizontal_camera_tween_ease
 		)
+	else:
+		_camera_motion_start_x = desired_position.x
+		_camera_motion_target_x = desired_position.x
+		_camera_motion_elapsed_x = 0.0
+
+	var next_y := desired_position.y
+	if vertical_duration > 0.0:
+		_camera_motion_elapsed_y = minf(_camera_motion_elapsed_y + delta, vertical_duration)
+		next_y = _interpolate_camera_axis(
+			_camera_motion_start_y,
+			_camera_motion_target_y,
+			_camera_motion_elapsed_y,
+			vertical_duration,
+			vertical_camera_tween_transition,
+			vertical_camera_tween_ease
+		)
+	else:
+		_camera_motion_start_y = desired_position.y
+		_camera_motion_target_y = desired_position.y
+		_camera_motion_elapsed_y = 0.0
+
+	_apply_camera_position(Vector2(
+		next_x,
+		next_y
 	))
 
 
@@ -229,16 +256,44 @@ func _apply_camera_position(position: Vector2) -> void:
 
 
 func _sync_camera_motion(position: Vector2) -> void:
-	_camera_motion_start_position = position
-	_camera_motion_target_position = position
-	_camera_motion_elapsed = 0.0
+	_camera_motion_start_x = position.x
+	_camera_motion_target_x = position.x
+	_camera_motion_elapsed_x = 0.0
+	_camera_motion_start_y = position.y
+	_camera_motion_target_y = position.y
+	_camera_motion_elapsed_y = 0.0
 
 
-func _get_camera_tween_duration() -> float:
-	if camera_tween_duration <= 0.0:
+func _interpolate_camera_axis(
+	start: float,
+	target_axis: float,
+	elapsed: float,
+	duration: float,
+	transition: Tween.TransitionType,
+	ease: Tween.EaseType
+) -> float:
+	return Tween.interpolate_value(
+		start,
+		target_axis - start,
+		elapsed,
+		duration,
+		transition,
+		ease
+	)
+
+
+func _get_horizontal_camera_tween_duration() -> float:
+	if horizontal_camera_tween_duration <= 0.0:
 		return 0.0
 
-	return camera_tween_duration / maxf(camera_tween_speed_scale, 0.001)
+	return horizontal_camera_tween_duration / maxf(horizontal_camera_tween_speed_scale, 0.001)
+
+
+func _get_vertical_camera_tween_duration() -> float:
+	if vertical_camera_tween_duration <= 0.0:
+		return 0.0
+
+	return vertical_camera_tween_duration / maxf(vertical_camera_tween_speed_scale, 0.001)
 
 
 func _is_target_grounded() -> bool:

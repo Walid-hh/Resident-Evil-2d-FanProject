@@ -170,7 +170,7 @@ Important file: `enemy/mob.gd`
 
 ### Camera
 
-The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport when it can advance, and stops at authored camera bounds or active camera stops without rewriting the Player's position or velocity. It also uses lightweight forward lookahead and tween-eased, pixel-snapped camera targets so the camera stays crisp for pixel art, while following a fixed `-48` pixel floor offset only while the Player is grounded.
+The player owns the active `PlayerCamera`, a custom `Camera2D` controller that creates a Metal Slug-style side-scroller frame. Camera progress moves forward only, keeps the player around the left third of the 320x180 viewport when it can advance, and stops at authored camera bounds or active camera stops without rewriting the Player's position or velocity. It also uses lightweight forward lookahead and independently tunable horizontal and vertical tween-eased, pixel-snapped camera axes so the camera stays crisp for pixel art, while following a fixed `-48` pixel floor offset only while the Player is grounded.
 
 The player scene also carries two `StaticBody2D` camera boundary bodies on the Camera node, one at each horizontal side of the frame, with controlled collision layer and mask settings so they only keep the Player inside the visible area. This visible-frame confinement is owned by scene collision bodies, not by `PlayerCamera`.
 

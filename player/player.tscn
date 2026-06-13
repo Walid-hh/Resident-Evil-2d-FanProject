@@ -46,13 +46,9 @@
 [ext_resource type="Script" uid="uid://d2se3nxtn8tew" path="res://player/scripts/pause_menu.gd" id="49_pause_menu"]
 [ext_resource type="Script" uid="uid://cq7dw8ugxxbit" path="res://player/scripts/inventory_grid_view.gd" id="50_inventory_grid_view"]
 
-[sub_resource type="SegmentShape2D" id="SegmentShape2D_a2xo5"]
-a = Vector2(0, -90)
-b = Vector2(0, 90)
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_j55il"]
 
-[sub_resource type="SegmentShape2D" id="SegmentShape2D_art4l"]
-a = Vector2(0, -90)
-b = Vector2(0, 90)
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_xcnuv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r7pn3"]
 atlas = ExtResource("2_e7oew")
@@ -930,7 +926,7 @@ script = ExtResource("1_oul6g")
 [node name="PlayerMotor" type="Node" parent="." unique_id=1100262111 node_paths=PackedStringArray("anchor")]
 unique_name_in_owner = true
 script = ExtResource("40_motor")
-jump_height = 65.0
+jump_height = 60.0
 jump_time_to_peak = 0.4
 jump_time_to_descent = 0.30000000000000004
 max_fall_speed = 300.0
@@ -985,23 +981,25 @@ limit_enabled = false
 script = ExtResource("46_camera")
 target = NodePath("..")
 player_screen_x = 120.0
-camera_tween_duration = 0.5
+vertical_camera_tween_duration = 0.5
 
 [node name="CameraRightBoundary" type="StaticBody2D" parent="Camera" unique_id=948335356]
-position = Vector2(160, 0)
+position = Vector2(161, 0)
 collision_layer = 2147483648
 collision_mask = 2147483648
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Camera/CameraRightBoundary" unique_id=276045859]
-shape = SubResource("SegmentShape2D_a2xo5")
+rotation = 4.712389
+shape = SubResource("WorldBoundaryShape2D_j55il")
 
 [node name="CameraLeftBoundary" type="StaticBody2D" parent="Camera" unique_id=1940894773]
-position = Vector2(-160, 0)
+position = Vector2(-162, 0)
+rotation = 1.5707964
 collision_layer = 2147483648
 collision_mask = 2147483648
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Camera/CameraLeftBoundary" unique_id=1004238643]
-shape = SubResource("SegmentShape2D_art4l")
+shape = SubResource("WorldBoundaryShape2D_xcnuv")
 
 [node name="Legs" type="AnimatedSprite2D" parent="." unique_id=1495406380]
 unique_name_in_owner = true
