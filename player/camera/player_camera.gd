@@ -103,6 +103,10 @@ func get_screen_right() -> float:
 	return get_screen_center_position().x + viewport_size.x * 0.5
 
 
+func get_visible_world_rect() -> Rect2:
+	return Rect2(get_screen_center_position() - viewport_size * 0.5, viewport_size)
+
+
 func get_target_camera_position() -> Vector2:
 	return target_camera_position
 

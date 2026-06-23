@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dr2nk67s5lj73"
-path="res://.godot/imported/hectorRun-Sheet.png-2f820754014bbf4a932f18fadcf78486.ctex"
+uid="uid://dos5mx0uv7ov7"
+path="res://.godot/imported/melee_enemy_attack_sheet.png-638191f5f2ad4365cbe1d942b9a5e9e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://enemy/enemyAssets/hectorRun-Sheet.png"
-dest_files=["res://.godot/imported/hectorRun-Sheet.png-2f820754014bbf4a932f18fadcf78486.ctex"]
+source_file="res://enemy/enemyAssets/melee_enemy_attack_sheet.png"
+dest_files=["res://.godot/imported/melee_enemy_attack_sheet.png-638191f5f2ad4365cbe1d942b9a5e9e2.ctex"]
 
 [params]
 

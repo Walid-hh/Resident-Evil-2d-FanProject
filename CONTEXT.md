@@ -8,7 +8,7 @@ Resident Evil 4 2D is a Godot 4.6 side-scrolling action prototype. This document
 - The main scene is `levels/test_level.tscn`.
 - The game runs at a 320x180 viewport and stretches to a 1920x1080 window.
 - `Global` is an autoload from `common/global.gd` and stores shared player-facing state and signals.
-- Current playable scope is a test level containing the player and Hector enemy instances.
+- Current playable scope is a test level containing the player, a MeleeEnemy instance, and a RangedEnemy instance.
 
 ## Canonical Language
 
@@ -17,16 +17,17 @@ The controllable character. The player owns movement state, aim direction, weapo
 _Code_: `player/scripts/player.gd`
 
 **Enemy**:
-A hostile NPC. Use "Enemy" in design and documentation even though the current base script class is named `Mob`.
+A hostile NPC. Use "Enemy" in design and documentation.
+_Code_: `enemy/enemy.gd`
 _Avoid_: Mob, hostile
 
-**Mob**:
-The current code-level base class for enemies. Treat this as an implementation name, not the canonical domain term.
-_Code_: `enemy/mob.gd`
+**MeleeEnemy**:
+The first concrete Enemy type. It is a normal-speed melee enemy that wakes from an activation area, chases horizontally, attacks through an authored melee hit window, recovers, and resumes chasing.
+_Code_: `enemy/melee_enemy.tscn`
 
-**Hector**:
-The current concrete enemy type used in the test level.
-_Code_: `enemy/hector.tscn`
+**RangedEnemy**:
+A concrete Enemy type that wakes from an activation area, chases horizontally until the Player is within maximum attack range, fires an enemy-owned projectile from an authored spawn point only when that spawn point is visible in the active camera frame, recovers, and resumes chasing or firing.
+_Code_: `enemy/ranged_enemy.tscn`
 
 **Weapon**:
 A player-owned firing tool mounted under the player's anchor. The player uses one generic weapon node whose active `WeaponConfig` determines the current weapon identity, projectile, active and inactive HUD icons, fire rate, and spread.
@@ -150,11 +151,27 @@ Important files:
 
 ### Enemies
 
-Enemy is the canonical project term. The current enemy base class is `Mob`, and Hector is the concrete enemy currently placed in `levels/test_level.tscn`.
+Enemy is the canonical project term. `Enemy` is the shared base behavior. `MeleeEnemy` and `RangedEnemy` are the current concrete enemy types.
 
-The current enemy behavior is state-based: inactive, run, attack, wait, and die are represented in code. Hector has activation and attack areas, an attack hit box, health, and an animation player for enabling attack collision.
+Current enemy behavior is state-based: inactive, chase, attack, recover, and death. MeleeEnemy uses authored activation and attack areas, horizontal side-scroller chase movement, an animation-driven attack hit box, a recovery timer, and HealthComponent-driven death. RangedEnemy uses authored activation, horizontal side-scroller chase movement, maximum attack-range checks, camera-visible projectile spawn checks, enemy-owned projectile firing, a recovery timer, and HealthComponent-driven death.
 
-Important file: `enemy/mob.gd`
+Enemy behavior is split across:
+- `Enemy`: state ownership, health/death handling, animation routing, and component orchestration.
+- `EnemyConfig`: per-type health, movement, recovery, and animation names.
+- `RangedEnemyConfig`: RangedEnemy attack range and projectile scene tuning.
+- `EnemySensing`: activation and attack-area player detection.
+- `EnemyHorizontalChaseMovement`: v1 horizontal chase movement and gravity.
+- `EnemyAttackController`: shared attack-controller boundary used by concrete attack controllers.
+- `EnemyMeleeAttackController`: attack hit-box lifecycle and attack completion.
+- `EnemyRangedAttackController`: projectile spawn, enemy projectile instancing, and ranged attack completion.
+- `EnemyCameraVisibility`: camera-frame visibility queries for enemy-owned attack gates.
+
+Important files:
+- `enemy/enemy.gd`
+- `enemy/melee_enemy.tscn`
+- `enemy/ranged_enemy.tscn`
+- `enemy/configs/melee_enemy_config.tres`
+- `enemy/configs/ranged_enemy_config.tres`
 
 ### Camera
 
@@ -197,7 +214,7 @@ Important files:
 
 `player/` contains the player scene, player logic, camera logic, weapons, projectiles, player animation assets, and HUD assets.
 
-`enemy/` contains the enemy base scene/script and the Hector enemy scene and assets.
+`enemy/` contains the Enemy base scene/script, MeleeEnemy content, enemy configs, enemy components, and enemy assets.
 
 `levels/` contains level scenes and level assets. `levels/test_level.tscn` is the current main scene.
 
@@ -221,13 +238,11 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `test/run_
 
 ## Current Gaps
 
-- Enemy activation, attack area transitions, and attack animation completion wiring are partly present but commented out in `enemy/mob.gd`.
-- The enemy state enum includes `DIE`, but current Enemy death handling still removes the Enemy directly when health reaches zero.
 - Sniper rifle assets, sniper bullet scene/script, and sniper HUD assets exist, but the sniper rifle is not integrated as a current player weapon.
 - Camera stop triggers can request and release stops, but no current encounter system automatically releases stops when an Enemy wave or boss is cleared.
 - Path2D camera rails are intentionally not part of the v1 camera implementation.
 - The player scene's Camera node includes two boundary `StaticBody2D` nodes with constrained collision layers and masks to keep the Player from leaving the visible frame.
-- The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
+- The `Global` autoload defines `player_died`, `enemy_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
 - There is no inventory display UI, item-use flow, pickup integration, or save/load support.
 
@@ -236,6 +251,6 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `test/run_
 - Prefer the canonical terms in this document when naming new design concepts or writing documentation.
 - Keep code changes aligned with the current scene ownership: player behavior in `player/`, enemy behavior in `enemy/`, and shared combat primitives in `common/`.
 - When adding a weapon, create a weapon config resource, add it to the player's weapon inventory config list, provide projectile and HUD assets, and add animation profile handling if the weapon needs a new arm animation set.
-- When adding an enemy, use "Enemy" in documentation and player-facing language, even if it inherits from the current `Mob` class.
+- When adding an enemy, use "Enemy" in documentation and player-facing language. Prefer EnemyConfig and enemy-owned components over adding behavior to the shared Enemy owner.
 - When changing damage behavior, verify hit box and hurt box flags together; mismatched flags make overlaps look broken even when collision shapes are correct.
 - Future inventory item visuals should treat `InventoryItemDefinition` and `PlayerInventory` as the gameplay data source of truth. Keep item presentation separate from Item Quantity storage.

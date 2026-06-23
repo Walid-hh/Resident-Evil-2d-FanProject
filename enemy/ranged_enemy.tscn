@@ -1,0 +1,163 @@
+[gd_scene format=3 uid="uid://daipb0sv5r74c"]
+
+[ext_resource type="PackedScene" uid="uid://cwahbir37mai4" path="res://enemy/enemyBase.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://bhea7d3ynnrsf" path="res://enemy/ranged_enemy.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://dos5mx0uv7ov7" path="res://enemy/enemyAssets/melee_enemy_attack_sheet.png" id="3_attack_texture"]
+[ext_resource type="Texture2D" uid="uid://ihg6aobhe23p" path="res://enemy/enemyAssets/melee_enemy_idle.png" id="4_idle_texture"]
+[ext_resource type="Texture2D" uid="uid://dr2nk67s5lj73" path="res://enemy/enemyAssets/melee_enemy_run_sheet.png" id="5_run_texture"]
+[ext_resource type="Resource" path="res://enemy/configs/ranged_enemy_config.tres" id="6_config"]
+[ext_resource type="Script" uid="uid://blowp02wkapjp" path="res://enemy/enemy_ranged_attack_controller.gd" id="7_ranged_attack"]
+[ext_resource type="Script" uid="uid://chn621wevehf1" path="res://enemy/enemy_camera_visibility.gd" id="8_camera_visibility"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack_0"]
+atlas = ExtResource("3_attack_texture")
+region = Rect2(0, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack_1"]
+atlas = ExtResource("3_attack_texture")
+region = Rect2(72, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack_2"]
+atlas = ExtResource("3_attack_texture")
+region = Rect2(144, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack_3"]
+atlas = ExtResource("3_attack_texture")
+region = Rect2(216, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack_4"]
+atlas = ExtResource("3_attack_texture")
+region = Rect2(288, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle"]
+atlas = ExtResource("4_idle_texture")
+region = Rect2(0, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_0"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(0, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_1"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(72, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_2"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(144, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_3"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(216, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_4"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(288, 0, 72, 72)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_run_5"]
+atlas = ExtResource("5_run_texture")
+region = Rect2(360, 0, 72, 72)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ranged"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack_1")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_attack_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack_4")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle")
+}],
+"loop": false,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_run_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_run_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_run_2")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_run_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_run_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_run_5")
+}],
+"loop": true,
+"name": &"run",
+"speed": 12.0
+}]
+
+[sub_resource type="RectangleShape2D" id="BodyShape"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="ActivationShape"]
+size = Vector2(320, 106)
+
+[sub_resource type="RectangleShape2D" id="HurtShape"]
+size = Vector2(22, 28)
+
+[node name="RangedEnemy" unique_id=84467823 instance=ExtResource("1_base")]
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("2_script")
+config = ExtResource("6_config")
+
+[node name="StateDebugLabel" parent="." index="0" unique_id=886942218]
+visible = false
+
+[node name="AnimatedSprite2D" parent="." index="1" unique_id=455128843]
+sprite_frames = SubResource("SpriteFrames_ranged")
+animation = &"run"
+autoplay = "idle"
+
+[node name="CollisionShape2D" parent="." index="2" unique_id=1428837338]
+shape = SubResource("BodyShape")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationArea" parent_id_path=PackedInt32Array(1037891176) index="0" unique_id=2481132]
+position = Vector2(0, -37)
+shape = SubResource("ActivationShape")
+debug_color = Color(0.6784314, 0.5058824, 0, 0.41960785)
+
+[node name="HurtBox2D" parent="." index="6" unique_id=1155624927]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox2D" index="0" unique_id=847244489]
+shape = SubResource("HurtShape")
+debug_color = Color(0.17254902, 0.62352943, 0, 0.41960785)
+
+[node name="EnemyAttackController" parent="." index="9" unique_id=1262017812 node_paths=PackedStringArray("projectile_spawn", "camera_visibility")]
+script = ExtResource("7_ranged_attack")
+projectile_spawn = NodePath("../ProjectileSpawn")
+camera_visibility = NodePath("../EnemyCameraVisibility")
+
+[node name="EnemyCameraVisibility" type="Node" parent="." index="11" unique_id=1856270096]
+unique_name_in_owner = true
+script = ExtResource("8_camera_visibility")
+
+[node name="ProjectileSpawn" type="Marker2D" parent="." index="12" unique_id=2141807795]
+unique_name_in_owner = true
+position = Vector2(16, 0)

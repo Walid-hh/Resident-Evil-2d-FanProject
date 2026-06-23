@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://mywjkld2wd7p" path="res://player/weapons/projectiles/bullet.tscn" id="1_bullet"]
+[ext_resource type="Script" uid="uid://d1ysttmwauxn1" path="res://player/weapons/projectiles/scripts/handgun_bullet.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://dwy4g5w4b2p5o" path="res://player/weapons/projectiles/projectileAssets/HandgunBullet.png" id="3_texture"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_enemy_handgun"]
+atlas = ExtResource("3_texture")
+region = Rect2(0, 0, 72, 72)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_enemy_handgun"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_enemy_handgun")
+}],
+"loop": false,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy_handgun"]
+size = Vector2(8, 6)
+
+[node name="EnemyHandgunBullet" instance=ExtResource("1_bullet")]
+script = ExtResource("2_script")
+speed = 400.0
+
+[node name="Sprite2D" parent="." index="0"]
+sprite_frames = SubResource("SpriteFrames_enemy_handgun")
+autoplay = "default"
+
+[node name="HitBox2D" parent="." index="1"]
+collision_layer = 2
+collision_mask = 1
+damage_source = 2
+detected_hurtboxes = 1
+
+[node name="CollisionShape2D" parent="HitBox2D" index="0"]
+shape = SubResource("RectangleShape2D_enemy_handgun")

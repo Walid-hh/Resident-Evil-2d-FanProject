@@ -1,7 +1,7 @@
 extends Node
 
 signal player_died
-signal mob_died(mob: Mob)
+signal enemy_died(enemy: Enemy)
 
 var player_level = 1
 var player_position : Vector2

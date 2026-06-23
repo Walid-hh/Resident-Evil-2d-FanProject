@@ -14,14 +14,14 @@ signal took_hit(hit_box: HitBox2D)
 #ANCHOR:const_damage_source
 const DAMAGE_SOURCE_PLAYER := 0b01
 #END:const_damage_source
-const DAMAGE_SOURCE_MOB := 0b10
+const DAMAGE_SOURCE_ENEMY := 0b10
 ## Controls which damage source the hurt box can take damage from.
 ## This changes the node's collision mask so it will only collide with a matching damage source.
 #ANCHOR:var_damage_source
-@export_flags("Player", "Mob") var damage_source := DAMAGE_SOURCE_PLAYER: set = set_damage_source
+@export_flags("Player", "Enemy") var damage_source := DAMAGE_SOURCE_PLAYER: set = set_damage_source
 #END:var_damage_source
 #ANCHOR:var_hurtbox_type
-@export_flags("Player", "Mob") var hurtbox_type := DAMAGE_SOURCE_PLAYER: set = set_hurtbox_type
+@export_flags("Player", "Enemy") var hurtbox_type := DAMAGE_SOURCE_PLAYER: set = set_hurtbox_type
 #END:var_hurtbox_type
 
 

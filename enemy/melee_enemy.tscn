@@ -1,11 +1,13 @@
-[gd_scene format=3 uid="uid://c5h3gt7t563ov"]
+[gd_scene format=3 uid="uid://b1q6sn6d1xqjo"]
 
 [ext_resource type="PackedScene" uid="uid://cwahbir37mai4" path="res://enemy/enemyBase.tscn" id="1_w8idt"]
-[ext_resource type="Texture2D" uid="uid://dos5mx0uv7ov7" path="res://enemy/enemyAssets/hectorAttack-Sheet.png" id="2_df6yt"]
-[ext_resource type="Script" uid="uid://c76qy63w4slo5" path="res://enemy/mob.gd" id="2_vuq4f"]
-[ext_resource type="Texture2D" uid="uid://ihg6aobhe23p" path="res://enemy/enemyAssets/hectorIdle.png" id="3_vuq4f"]
-[ext_resource type="Texture2D" uid="uid://dr2nk67s5lj73" path="res://enemy/enemyAssets/hectorRun-Sheet.png" id="4_xbpa6"]
+[ext_resource type="Texture2D" uid="uid://dos5mx0uv7ov7" path="res://enemy/enemyAssets/melee_enemy_attack_sheet.png" id="2_df6yt"]
+[ext_resource type="Script" path="res://enemy/melee_enemy.gd" id="2_vuq4f"]
+[ext_resource type="Texture2D" uid="uid://ihg6aobhe23p" path="res://enemy/enemyAssets/melee_enemy_idle.png" id="3_vuq4f"]
+[ext_resource type="Texture2D" uid="uid://dr2nk67s5lj73" path="res://enemy/enemyAssets/melee_enemy_run_sheet.png" id="4_xbpa6"]
+[ext_resource type="Resource" path="res://enemy/configs/melee_enemy_config.tres" id="5_config"]
 [ext_resource type="Script" uid="uid://cr1xl5pi6s37u" path="res://common/hit_box.gd" id="6_vuq4f"]
+[ext_resource type="Script" path="res://enemy/enemy_melee_attack_controller.gd" id="7_melee_attack_controller"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4et6g"]
 atlas = ExtResource("2_df6yt")
@@ -174,11 +176,11 @@ _data = {
 &"attack": SubResource("Animation_vuq4f")
 }
 
-[node name="Hector" unique_id=230910072 instance=ExtResource("1_w8idt")]
+[node name="MeleeEnemy" unique_id=230910072 instance=ExtResource("1_w8idt")]
 collision_layer = 2
 collision_mask = 2
 script = ExtResource("2_vuq4f")
-max_speed = 50.0
+config = ExtResource("5_config")
 
 [node name="StateDebugLabel" parent="." index="0" unique_id=886942218]
 visible = false
@@ -208,7 +210,7 @@ visible = false
 shape = SubResource("RectangleShape2D_xbpa6")
 debug_color = Color(0.17254902, 0.62352943, 0, 0.41960785)
 
-[node name="Attack" type="Area2D" parent="." index="7" unique_id=1683821133]
+[node name="Attack" type="Area2D" parent="." index="11" unique_id=1683821133]
 unique_name_in_owner = true
 visible = false
 collision_layer = 2
@@ -235,10 +237,11 @@ position = Vector2(20.5, 0)
 shape = SubResource("RectangleShape2D_qi44l")
 debug_color = Color(1, 0, 0, 0.41960785)
 
-[node name="AttackEnabler" type="AnimationPlayer" parent="." index="8" unique_id=1938219148]
+[node name="AttackEnabler" type="AnimationPlayer" parent="." index="12" unique_id=1938219148]
 unique_name_in_owner = true
 libraries/ = SubResource("AnimationLibrary_xbpa6")
 
-[node name="WaitTimer" parent="." index="9" unique_id=942717471]
-unique_name_in_owner = true
-one_shot = true
+[node name="EnemyAttackController" parent="." index="9" unique_id=1262017812 node_paths=PackedStringArray("attack_hit_box", "attack_enabler")]
+script = ExtResource("7_melee_attack_controller")
+attack_hit_box = NodePath("../Attack")
+attack_enabler = NodePath("../AttackEnabler")

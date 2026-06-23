@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyConfig" format=3]
+
+[ext_resource type="Script" path="res://enemy/enemy_config.gd" id="1_config_script"]
+
+[resource]
+script = ExtResource("1_config_script")
+max_health = 5
+acceleration = 1400.0
+max_speed = 50.0
+jump_height = 50.0
+jump_time_to_descent = 0.2
+recovery_time = 0.6
+inactive_animation = &"idle"
+chase_animation = &"run"
+attack_animation = &"attack"
+recovery_animation = &"idle"
+death_animation = &"idle"

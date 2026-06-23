@@ -15,7 +15,7 @@ signal hit_hurt_box(hurt_box: HurtBox2D)
 
 #ANCHOR:const_source
 const DAMAGE_SOURCE_PLAYER := 0b01
-const DAMAGE_SOURCE_MOB := 0b10
+const DAMAGE_SOURCE_ENEMY := 0b10
 #END:const_source
 
 ## The amount of damage the hit box deals.
@@ -24,10 +24,10 @@ const DAMAGE_SOURCE_MOB := 0b10
 #END:var_damage
 ## The type of damage that the hit box deals. This helps hurt boxes to filter out damage types.
 #ANCHOR:var_damage_source
-@export_flags("Player", "Mob") var damage_source := DAMAGE_SOURCE_PLAYER: set = set_damage_source
+@export_flags("Player", "Enemy") var damage_source := DAMAGE_SOURCE_PLAYER: set = set_damage_source
 #END:var_damage_source
 #ANCHOR:var_detected_hurtboxes
-@export_flags("Player", "Mob") var detected_hurtboxes := DAMAGE_SOURCE_MOB: set = set_detected_hurtboxes
+@export_flags("Player", "Enemy") var detected_hurtboxes := DAMAGE_SOURCE_ENEMY: set = set_detected_hurtboxes
 #END:var_detected_hurtboxes
 
 #ANCHOR:func_init

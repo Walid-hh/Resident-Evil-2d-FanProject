@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RangedEnemyConfig" format=3]
+
+[ext_resource type="Script" path="res://enemy/ranged_enemy_config.gd" id="1_config_script"]
+[ext_resource type="PackedScene" path="res://enemy/projectiles/enemy_handgun_bullet.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_config_script")
+max_health = 4
+acceleration = 1400.0
+max_speed = 45.0
+jump_height = 50.0
+jump_time_to_descent = 0.2
+recovery_time = 0.9
+inactive_animation = &"idle"
+chase_animation = &"run"
+attack_animation = &"attack"
+recovery_animation = &"idle"
+death_animation = &"idle"
+attack_range = 180.0
+projectile_scene = ExtResource("2_projectile")

@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://cqcyq2n8ynkib" path="res://common/health_component.gd" id="1_4p76k"]
 [ext_resource type="Script" uid="uid://dv26viptqxcvo" path="res://common/hurt_box.gd" id="2_j1c1k"]
+[ext_resource type="Script" path="res://enemy/enemy_sensing.gd" id="3_sensing"]
+[ext_resource type="Script" path="res://enemy/enemy_horizontal_chase_movement.gd" id="4_movement"]
+[ext_resource type="Script" path="res://enemy/enemy_attack_controller.gd" id="5_attack_controller"]
 
 [node name="Enemy" type="CharacterBody2D" unique_id=230910072]
 
@@ -22,6 +25,7 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="HealthComponent" type="Node2D" parent="." unique_id=2042380706 node_paths=PackedStringArray("hurt_box")]
+unique_name_in_owner = true
 script = ExtResource("1_4p76k")
 hurt_box = NodePath("../HurtBox2D")
 metadata/_custom_type_script = "uid://cqcyq2n8ynkib"
@@ -32,4 +36,20 @@ script = ExtResource("2_j1c1k")
 hurtbox_type = 2
 metadata/_custom_type_script = "uid://dv26viptqxcvo"
 
-[node name="WaitTimer" type="Timer" parent="." unique_id=942717471]
+[node name="EnemySensing" type="Node" parent="." unique_id=1262017810 node_paths=PackedStringArray("activation_area", "attack_area")]
+unique_name_in_owner = true
+script = ExtResource("3_sensing")
+activation_area = NodePath("../ActivationArea")
+attack_area = NodePath("../AttackArea")
+
+[node name="EnemyHorizontalChaseMovement" type="Node" parent="." unique_id=1262017811]
+unique_name_in_owner = true
+script = ExtResource("4_movement")
+
+[node name="EnemyAttackController" type="Node" parent="." unique_id=1262017812]
+unique_name_in_owner = true
+script = ExtResource("5_attack_controller")
+
+[node name="RecoveryTimer" type="Timer" parent="." unique_id=942717471]
+unique_name_in_owner = true
+one_shot = true
