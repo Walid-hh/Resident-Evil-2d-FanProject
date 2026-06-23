@@ -1,14 +1,12 @@
-[gd_resource type="Resource" script_class="ItemConfig" format=3 uid="uid://dbp82e2dyvdfj"]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://dbp82e2dyvdfj"]
 
-[ext_resource type="Script" uid="uid://b2dfkpbc1vskx" path="res://inventory/item_config.gd" id="1_item_config_script"]
+[ext_resource type="Script" path="res://inventory/inventory_item_definition.gd" id="1_item_definition_script"]
 [ext_resource type="Texture2D" uid="uid://bg2idqwgyydl6" path="res://levels/levelsAssets/placeholder.png" id="2_placeholder"]
 
 [resource]
-script = ExtResource("1_item_config_script")
+script = ExtResource("1_item_definition_script")
 item_key = &"shotgun_ammo"
 display_name = "Shotgun Ammo"
 item_type = 1
-width = 2
 icon_texture = ExtResource("2_placeholder")
-stackable = true
-max_stack_quantity = 20
+max_quantity = 20

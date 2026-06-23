@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="InventorySlotDefinition" format=3]
+
+[ext_resource type="Script" path="res://inventory/inventory_slot_definition.gd" id="1_slot_definition_script"]
+[ext_resource type="Resource" uid="uid://cx8ilyeechgcr" path="res://inventory/items/green_herb.tres" id="2_green_herb"]
+
+[resource]
+script = ExtResource("1_slot_definition_script")
+item_definition = ExtResource("2_green_herb")
+starting_quantity = 1

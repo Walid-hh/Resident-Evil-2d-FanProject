@@ -1,5 +1,8 @@
 extends GutTest
 
+const InventoryItemDefinitionScript := preload("res://inventory/inventory_item_definition.gd")
+const InventorySlotDefinitionScript := preload("res://inventory/inventory_slot_definition.gd")
+
 class TestWeapon:
 	extends Weapon
 
@@ -21,7 +24,9 @@ var _player_inventory: PlayerInventory
 func before_each() -> void:
 	_anchor = add_child_autofree(Marker2D.new())
 	_weapon = add_child_autofree(TestWeapon.new())
-	_player_inventory = add_child_autofree(PlayerInventory.new())
+	_player_inventory = PlayerInventory.new()
+	_player_inventory.slot_definitions = [_make_slot(_make_item_definition(&"shotgun_ammo", 20), 10)]
+	add_child_autofree(_player_inventory)
 	_inventory = add_child_autofree(WeaponInventory.new())
 	_inventory.anchor = _anchor
 	_inventory.weapon = _weapon
@@ -130,6 +135,87 @@ func test_cooldown_is_preserved_per_weapon_key_when_cycling() -> void:
 	assert_eq(_weapon.fired_directions.size(), 3, "Handgun should fire after its preserved cooldown completes.")
 
 
+func test_cycle_skips_ammo_backed_weapon_without_ammo() -> void:
+	var handgun := _make_config(&"handgun", true)
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [handgun, shotgun]
+	_inventory.initialize()
+	_empty_shotgun_ammo()
+
+	_inventory.cycle_next_unlocked_weapon()
+
+	assert_eq(_inventory.get_unlocked_weapon_configs(), [handgun, shotgun])
+	assert_eq(_inventory.get_active_weapon_config(), handgun)
+	assert_eq(_weapon.get_weapon_config(), handgun)
+
+
+func test_cycle_can_select_ammo_backed_weapon_after_ammo_is_added() -> void:
+	var handgun := _make_config(&"handgun", true)
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [handgun, shotgun]
+	_inventory.initialize()
+	_empty_shotgun_ammo()
+	_player_inventory.add_item_quantity(_player_inventory.get_item_definition(&"shotgun_ammo"), 1)
+
+	_inventory.cycle_next_unlocked_weapon()
+
+	assert_eq(_inventory.get_active_weapon_config(), shotgun)
+	assert_eq(_weapon.get_weapon_config(), shotgun)
+
+
+func test_final_ammo_backed_shot_force_selects_handgun() -> void:
+	var handgun := _make_config(&"handgun", true)
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [handgun, shotgun]
+	_inventory.initialize()
+	_player_inventory.consume_item_quantity(&"shotgun_ammo", 9)
+	_inventory.cycle_next_unlocked_weapon()
+
+	var shot_fired := _inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0)
+
+	assert_true(shot_fired)
+	assert_eq(_weapon.fired_directions.size(), 1)
+	assert_eq(_player_inventory.get_item_quantity(&"shotgun_ammo"), 0)
+	assert_eq(_inventory.get_last_fired_weapon_config(), shotgun)
+	assert_eq(_inventory.get_active_weapon_config(), handgun)
+	assert_eq(_weapon.get_weapon_config(), handgun)
+
+
+func test_forced_handgun_fallback_emits_active_weapon_config_changed() -> void:
+	var handgun := _make_config(&"handgun", true)
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [handgun, shotgun]
+	_inventory.initialize()
+	_player_inventory.consume_item_quantity(&"shotgun_ammo", 9)
+	_inventory.cycle_next_unlocked_weapon()
+	watch_signals(_inventory)
+
+	_inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0)
+
+	assert_signal_emit_count(_inventory, "active_weapon_config_changed", 1)
+	assert_signal_emitted_with_parameters(_inventory, "active_weapon_config_changed", [handgun])
+
+
+func test_missing_handgun_fallback_keeps_current_weapon() -> void:
+	var shotgun := _make_config(&"shotgun", true)
+	shotgun.ammo_item_key = &"shotgun_ammo"
+	_inventory.weapon_configs = [shotgun]
+	_inventory.initialize()
+	_player_inventory.consume_item_quantity(&"shotgun_ammo", 9)
+
+	var shot_fired := _inventory.physics_update(0.0, true, Vector2.RIGHT, 1.0)
+
+	assert_true(shot_fired)
+	assert_eq(_player_inventory.get_item_quantity(&"shotgun_ammo"), 0)
+	assert_eq(_inventory.get_last_fired_weapon_config(), shotgun)
+	assert_eq(_inventory.get_active_weapon_config(), shotgun)
+	assert_eq(_weapon.get_weapon_config(), shotgun)
+
+
 func test_ammo_backed_weapon_consumes_ammo_when_firing() -> void:
 	var shotgun := _make_config(&"shotgun", true)
 	shotgun.ammo_item_key = &"shotgun_ammo"
@@ -153,6 +239,7 @@ func test_ammo_backed_weapon_does_not_fire_without_ammo() -> void:
 
 	assert_false(shot_fired)
 	assert_true(_weapon.fired_directions.is_empty())
+	assert_push_error("Unknown inventory item key")
 
 
 func test_cooldown_blocked_fire_does_not_consume_ammo_or_report_shot() -> void:
@@ -177,3 +264,24 @@ func _make_config(weapon_key: StringName, unlocked: bool, fire_rate: float = 0.0
 	config.fire_rate = fire_rate
 	config.unlocked_by_default = unlocked
 	return config
+
+
+func _make_slot(
+	item_definition: Resource,
+	starting_quantity: int
+) -> Resource:
+	var slot_definition := InventorySlotDefinitionScript.new()
+	slot_definition.item_definition = item_definition
+	slot_definition.starting_quantity = starting_quantity
+	return slot_definition
+
+
+func _make_item_definition(item_key: StringName, max_quantity: int) -> Resource:
+	var item_definition := InventoryItemDefinitionScript.new()
+	item_definition.item_key = item_key
+	item_definition.max_quantity = max_quantity
+	return item_definition
+
+
+func _empty_shotgun_ammo() -> void:
+	_player_inventory.consume_item_quantity(&"shotgun_ammo", _player_inventory.get_item_quantity(&"shotgun_ammo"))

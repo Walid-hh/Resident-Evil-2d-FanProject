@@ -132,6 +132,16 @@ func test_shotgun_ready_and_fire_paths_use_shotgun_prefix() -> void:
 	assert_eq(_arms.animation, &"arms_sg_right_fire", "Shotgun firing should use shotgun fire art.")
 
 
+func test_attack_uses_fired_config_when_active_weapon_already_changed() -> void:
+	var shotgun_config := _make_config(&"shotgun")
+	_weapon = add_child_autofree(_make_weapon(&"handgun", _make_config(&"handgun")))
+
+	_animator.start_attack(Vector2.RIGHT, shotgun_config)
+	_animator.physics_update("idle", PlayerMotor.State.GROUND, _weapon, Vector2.RIGHT)
+
+	assert_eq(_arms.animation, &"arms_sg_right_fire", "Attack should use the weapon config that fired.")
+
+
 func test_weapon_config_key_takes_priority_over_weapon_key() -> void:
 	_weapon = add_child_autofree(_make_weapon(&"handgun", _make_config(&"shotgun")))
 

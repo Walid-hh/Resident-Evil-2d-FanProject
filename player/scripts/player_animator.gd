@@ -33,6 +33,7 @@ const AIM_DIRECTION_TOKENS: Dictionary = {
 
 var _is_firing := false
 var _is_firing_animation_finished := true
+var _attack_weapon_config: WeaponConfig
 
 
 func _ready() -> void:
@@ -46,11 +47,12 @@ func physics_update(animation_key: String, player_state: int, weapon: Weapon, ai
 	_update_arm_animation(player_state, weapon, aim_direction)
 
 
-func start_attack(_aim_direction: Vector2) -> void:
+func start_attack(_aim_direction: Vector2, weapon_config: WeaponConfig = null) -> void:
 	if _is_firing:
 		return
 
 	_is_firing = true
+	_attack_weapon_config = weapon_config
 
 
 func is_firing() -> bool:
@@ -90,10 +92,10 @@ func _update_arm_animation(player_state: int, weapon: Weapon, aim_direction: Vec
 	if is_crouching and !_is_firing:
 		_play_if_changed(arms, _get_arm_animation_name(weapon, &"crouch", false))
 	elif is_crouching and _is_firing:
-		arms.play(_get_arm_animation_name(weapon, &"crouch", true))
+		arms.play(_get_attack_arm_animation_name(weapon, &"crouch"))
 		_is_firing_animation_finished = false
 	elif _is_firing:
-		arms.play(_get_arm_animation_name(weapon, _get_aim_direction_token(aim_direction), true))
+		arms.play(_get_attack_arm_animation_name(weapon, _get_aim_direction_token(aim_direction)))
 		_is_firing_animation_finished = false
 	else:
 		_play_if_changed(arms, _get_arm_animation_name(weapon, _get_ready_direction_token(aim_direction, player_state), false))
@@ -114,12 +116,24 @@ func _get_arm_animation_name(weapon: Weapon, direction_token: StringName, is_fir
 	return StringName(animation_name)
 
 
+func _get_attack_arm_animation_name(weapon: Weapon, direction_token: StringName) -> StringName:
+	var prefix := _get_arm_animation_prefix_for_config(_attack_weapon_config) if _attack_weapon_config != null else _get_arm_animation_prefix(weapon)
+	return StringName("%s_%s_fire" % [prefix, direction_token])
+
+
 func _get_arm_animation_prefix(weapon: Weapon) -> StringName:
 	if weapon == null:
 		return DEFAULT_ARM_PREFIX
 
 	var weapon_key := _get_weapon_key(weapon)
 	return ARM_PREFIX_BY_WEAPON_KEY.get(weapon_key, DEFAULT_ARM_PREFIX)
+
+
+func _get_arm_animation_prefix_for_config(weapon_config: WeaponConfig) -> StringName:
+	if weapon_config == null or weapon_config.weapon_key == &"":
+		return DEFAULT_ARM_PREFIX
+
+	return ARM_PREFIX_BY_WEAPON_KEY.get(weapon_config.weapon_key, DEFAULT_ARM_PREFIX)
 
 
 func _get_weapon_key(weapon: Weapon) -> StringName:
@@ -147,4 +161,5 @@ func _on_arms_animation_finished() -> void:
 	if _is_firing:
 		_is_firing = false
 		_is_firing_animation_finished = true
+		_attack_weapon_config = null
 		attack_animation_finished.emit()

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="InventorySlotDefinition" format=3]
+
+[ext_resource type="Script" path="res://inventory/inventory_slot_definition.gd" id="1_slot_definition_script"]
+[ext_resource type="Resource" uid="uid://dbp82e2dyvdfj" path="res://inventory/items/shotgun_ammo.tres" id="2_shotgun_ammo"]
+
+[resource]
+script = ExtResource("1_slot_definition_script")
+item_definition = ExtResource("2_shotgun_ammo")
+starting_quantity = 10

@@ -20,7 +20,7 @@
 - For behavior changes, include focused tests that cover the expected path and at least one relevant edge case.
 - If a feature cannot reasonably be unit tested in the current Godot setup, document the reason and provide a manual verification path.
 - Run the relevant tests or checks before handing work back. If they cannot be run, state why.
-- On this machine, use `GODOT_BIN=C:\Users\walid\OneDrive\Bureau\Professional Folder\Gdquest\Godot_v4.6.1-stable_win64.exe` when running `scripts/run_gut_tests.ps1`.
+- On this machine, use `GODOT_BIN=C:\Users\walid\OneDrive\Bureau\Professional Folder\Gdquest\Godot_v4.6.1-stable_win64.exe` when running `test/run_gut_tests.ps1`.
 
 ## Large Feature Review
 

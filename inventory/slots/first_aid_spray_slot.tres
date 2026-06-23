@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="InventorySlotDefinition" format=3]
+
+[ext_resource type="Script" path="res://inventory/inventory_slot_definition.gd" id="1_slot_definition_script"]
+[ext_resource type="Resource" uid="uid://bawjp5k3rlamb" path="res://inventory/items/first_aid_spray.tres" id="2_first_aid_spray"]
+
+[resource]
+script = ExtResource("1_slot_definition_script")
+item_definition = ExtResource("2_first_aid_spray")
+starting_quantity = 1

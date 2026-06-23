@@ -33,11 +33,14 @@ A player-owned firing tool mounted under the player's anchor. The player uses on
 _Code_: `player/weapons/weapon.gd`
 
 **Ammo-backed Weapon**:
-A Weapon whose `WeaponConfig` names an ammunition item key and ammo-per-shot cost. It can stay unlocked and selectable at zero ammunition, but it only fires when the PlayerInventory can supply the required Stack Quantity.
+A Weapon whose `WeaponConfig` names an ammunition item key and ammo-per-shot cost. It can stay unlocked at zero ammunition, but it is only selectable and fireable when the PlayerInventory can supply the required Item Quantity.
 _Code_: `player/scripts/weapon_inventory.gd`
 
 **Unlocked Weapon**:
-A weapon config available for player cycling and firing. Locked configs are ignored by the current weapon inventory.
+A weapon config included in the player's weapon loadout. Locked configs are ignored by the current weapon inventory.
+
+**Available Weapon**:
+An Unlocked Weapon that can currently be selected. Infinite-ammo weapons are always available, while Ammo-backed Weapons require enough Item Quantity for one shot.
 
 **Handgun**:
 An integrated current weapon. It fires a handgun projectile, is represented in the HUD, and intentionally uses infinite ammunition instead of consuming an inventory item.
@@ -66,47 +69,32 @@ _Code_: `common/health_component.gd`
 **Aim Direction**:
 The player's current snapped attack direction. It is shared through `Global.player_aim_direction` so weapons and animations can agree on firing direction.
 
-**GridInventory**:
-A reusable spatial inventory with finite columns and rows. It owns placed inventory items, validates rectangular cell occupancy, and emits when successful mutations change its contents. Do not confuse this with `WeaponInventory`, which is the current player weapon loadout selector.
-_Code_: `inventory/grid_inventory.gd`
-
-**Cell**:
-One addressable position in a `GridInventory`. Cells use `Vector2i` coordinates with `(0, 0)` as the top-left cell.
-
-**Inventory Cursor**:
-The Pause Menu selector for the player inventory grid. It points at one focused `GridInventory` cell, moves by Cell through empty space while the Pause Menu is open, wraps at grid edges, can identify the `InventoryItem` occupying its current Cell, and treats that item's occupied footprint as one movement target while visually framing the full footprint.
-_Code_: `player/scripts/inventory_grid_view.gd`
-
-**Held Item**:
-The Pause Menu inventory item currently picked up for repositioning. A Held Item follows the Inventory Cursor as a placement preview, can be rotated before placement, and does not mutate committed `GridInventory` state until placed.
-_Code_: `player/scripts/inventory_grid_view.gd`
+**Fixed-Slot Inventory**:
+A player-owned inventory model made of authored Inventory Slots. Each slot is tied to one predefined Inventory Item Definition and stores only that item's Item Quantity; items are not moved, rotated, swapped, or placed in a spatial grid.
+_Code_: `player/scripts/player_inventory.gd`
 
 **Ammunition**:
-A stackable inventory item consumed by an Ammo-backed Weapon. `shotgun_ammo` is the current ammunition item; handgun ammunition is intentionally not represented as an inventory item.
+A predefined inventory item consumed by an Ammo-backed Weapon. `shotgun_ammo` is the current ammunition item; handgun ammunition is intentionally not represented as an inventory item.
 _Code_: `inventory/items/shotgun_ammo.tres`
 
-**ItemConfig**:
-A reusable item definition. It stores shared item data such as canonical item key, item type, display name, rectangular footprint, rotation permission, optional UI icon, stackability, and maximum stack quantity.
-_Code_: `inventory/item_config.gd`
+**Inventory Item Definition**:
+A reusable non-spatial item definition. It stores the canonical item key, item type, display name, optional icon, and maximum Item Quantity.
+_Code_: `inventory/inventory_item_definition.gd`
 
-**InventoryItem**:
-One placed copy of an `ItemConfig` inside a `GridInventory`. It owns per-copy state such as generated instance id, origin cell, rotation state, and Stack Quantity.
-_Code_: `inventory/inventory_item.gd`
+**Inventory Slot**:
+An authored PlayerInventory entry that points to one Inventory Item Definition and provides its starting Item Quantity. The slot remains part of the inventory even when its Item Quantity reaches zero.
+_Code_: `inventory/inventory_slot_definition.gd`
 
-**Stackable Item**:
-An InventoryItem whose ItemConfig allows multiple units to share one grid footprint up to a configured maximum. Stackable Items can merge with matching stackable items, and an empty stack is removed from the GridInventory.
-_Code_: `inventory/grid_inventory.gd`
-
-**Stack Quantity**:
-The per-InventoryItem quantity stored on a Stackable Item. Stack Quantity is instance state, not shared ItemConfig state.
-_Code_: `inventory/inventory_item.gd`
+**Item Quantity**:
+The runtime count stored for one Inventory Slot. Item Quantity is player inventory state, not shared Inventory Item Definition state.
+_Code_: `player/scripts/player_inventory.gd`
 
 **PlayerInventory**:
-A player-owned inventory component. It wraps the reusable `GridInventory`, owns the player's current spatial inventory contents, seeds the current demo inventory items, and exposes item quantity helpers used by ammo-backed weapons and the HUD.
+A player-owned Fixed-Slot Inventory component. It owns current Item Quantities for authored Inventory Slots and exposes quantity helpers used by ammo-backed weapons and the HUD.
 _Code_: `player/scripts/player_inventory.gd`
 
 **Pause Menu**:
-The player-facing pause overlay opened by the `pause_menu` input action. It pauses gameplay and shows the player's inventory grid, including Inventory Cursor navigation and Held Item repositioning.
+The player-facing pause overlay opened by the `pause_menu` input action. It pauses gameplay and currently does not show inventory UI.
 _Code_: `player/scripts/pause_menu.gd`
 
 ## Runtime Systems
@@ -118,9 +106,9 @@ The player is a `CharacterBody2D` with explicit movement states: ground, jump, f
 Player ownership is split across:
 - `PlayerMotor`: movement state, gravity, coyote timer, jump buffer, velocity changes, and crouch anchor offsets.
 - `AimController`: horizontal input, snapped aim direction, facing, and compatibility writes to `Global.player_aim_direction` and `Global.player_last_direction`.
-- `WeaponInventory`: exported weapon config inventory, unlocked config filtering, active config cycling, single weapon-node assignment, anchor rotation, per-weapon-key cooldown flow, and ammo-backed firing checks through `PlayerInventory`.
+- `WeaponInventory`: exported weapon config inventory, unlocked config filtering, available weapon cycling, single weapon-node assignment, anchor rotation, per-weapon-key cooldown flow, and ammo-backed firing checks through `PlayerInventory`.
 - `PlayerAnimator`: legs, body, head, and arms animation routing, including attack animation state and weapon-specific arm animations. It avoids restarting unchanged non-attack animations every frame, while attack animation restarts remain explicit.
-- `PlayerInventory`: player-owned spatial inventory state backed by `GridInventory`.
+- `PlayerInventory`: player-owned Fixed-Slot Inventory state.
 
 Weapon choice and successful firing state influence arm animations, while aim direction can influence head and arm direction. `PlayerAnimator` resolves arm animations from `WeaponConfig.weapon_key` profiles and shared direction tokens, with handgun as the fallback profile. The player wires weapon inventory, inventory quantity, and health signals to the HUD; player weapon getters still delegate to the weapon inventory for compatibility with existing callers.
 
@@ -130,11 +118,11 @@ Important file: `player/scripts/player.gd`
 
 `AimController` computes a snapped aim direction from movement input. When no meaningful aim input is present, `WeaponInventory` falls back to the player's last horizontal facing direction.
 
-Pressing fire lets the active weapon spawn its projectile only when its fire timer is ready and any configured ammunition cost can be paid. The player's attack animation starts only for a successful shot. Firing can temporarily block crouch exit until the firing animation finishes. `Global.player_aim_direction` remains a compatibility surface written by `AimController`; new player internals should prefer direct controller/inventory references.
+Pressing fire lets the active weapon spawn its projectile only when its fire timer is ready and any configured ammunition cost can be paid. The player's attack animation starts only for a successful shot. If an Ammo-backed Weapon spends its last available shot, weapon selection falls back to Handgun. Firing can temporarily block crouch exit until the firing animation finishes. `Global.player_aim_direction` remains a compatibility surface written by `AimController`; new player internals should prefer direct controller/inventory references.
 
 ### Weapons And Projectiles
 
-One generic weapon node lives under the player's `Anchor` marker. At startup, `WeaponInventory` filters exported `WeaponConfig` resources to the unlocked configs, assigns the first unlocked config to the weapon node, and cycles by swapping that node's active config.
+One generic weapon node lives under the player's `Anchor` marker. At startup, `WeaponInventory` filters exported `WeaponConfig` resources to the unlocked configs, assigns the first unlocked config to the weapon node, and cycles by swapping that node's active config. Empty Ammo-backed Weapons remain visible in the HUD but are skipped by weapon cycling until ammunition is available again.
 
 The current integrated weapons are handgun and shotgun. Both use standalone config resources for projectile scene, fire rate, spread, active and inactive HUD icons, canonical weapon key, and optional ammunition data. `WeaponInventory` supplies the current fire direction, rotates the anchor, consumes configured ammunition only for successful shots, and tracks cooldowns per weapon key so cycling does not reset a weapon's cooldown.
 
@@ -183,29 +171,29 @@ Important files:
 
 ### HUD
 
-The player HUD shows weapon focus state, per-slot ammo counts, and player health. It renders weapon slots from the player's unlocked weapon configs in inventory order, uses each weapon config's active or inactive HUD icon for weapon-specific art, and owns the shared slot frame and focus indicator. Handgun displays infinite ammunition, while ammo-backed weapons display their current total matching Stack Quantity. The HUD updates from weapon inventory, inventory, and health signals instead of polling player state every frame.
+The player HUD shows weapon focus state, per-slot ammo counts, and player health. It renders weapon slots from the player's unlocked weapon configs in inventory order, uses each weapon config's active or inactive HUD icon for weapon-specific art, and owns the shared slot frame and focus indicator. Handgun displays infinite ammunition, while ammo-backed weapons display their current Item Quantity. The HUD updates from weapon inventory, inventory, and health signals instead of polling player state every frame.
 
 Important files:
 - `player/scripts/player_hud.gd`
 - `player/scripts/player_hud_weapon_slot.gd`
 
-### Grid Inventory
+### Fixed-Slot Inventory
 
-`GridInventory` is the core model for Resident Evil 4-style spatial inventory behavior. It is reusable gameplay infrastructure, not player-only UI state. The v1 system supports rectangular item footprints, per-item rotation permission, explicit placement, first-fit placement, moving, rotating, removing, occupancy queries, item lookup by Cell, stack quantities, stack merging, item quantity consumption, and result objects with failure reasons and leftover quantity.
+`PlayerInventory` is the core model for current inventory behavior. It owns authored Inventory Slots and runtime Item Quantities keyed by Inventory Item Definition item keys. The current integrated slots are green herb, shotgun ammo, and first aid spray. Unknown non-empty item keys are treated as authoring errors, while an empty item key remains the compatibility surface for infinite or no-ammunition weapons.
 
-The player currently has a Pause Menu inventory screen that renders the player-owned `GridInventory`, supports Inventory Cursor navigation, shows Stack Quantity labels, and lets the player use `inventory_pick_place` to pick/place a Held Item, merge matching stackable Held Items, and `inventory_rotate_item` to rotate before placement. There is no mouse drag and drop, stack splitting, pickup integration, or save/load format yet. `WeaponInventory` remains the current weapon loadout selector and cooldown owner.
+The Pause Menu no longer renders inventory contents or supports item movement. There is no item-use flow, pickup integration, inventory display UI, or save/load format yet. `WeaponInventory` remains the current weapon loadout selector and cooldown owner.
 
 Important files:
-- `inventory/grid_inventory.gd`
-- `inventory/item_config.gd`
-- `inventory/inventory_item.gd`
-- `inventory/inventory_placement_result.gd`
+- `player/scripts/player_inventory.gd`
+- `inventory/inventory_item_definition.gd`
+- `inventory/inventory_slot_definition.gd`
+- `inventory/inventory_quantity_result.gd`
 
 ## Scene And Content Map
 
 `common/` contains shared gameplay components such as global state, health, hit boxes, and hurt boxes.
 
-`inventory/` contains reusable grid inventory model scripts.
+`inventory/` contains fixed-slot inventory item and slot definition resources.
 
 `player/` contains the player scene, player logic, camera logic, weapons, projectiles, player animation assets, and HUD assets.
 
@@ -224,14 +212,12 @@ Input actions are defined in `project.godot`:
 - `next_weapon`: cycle forward through unlocked weapons.
 - `previous_weapon`: cycle backward through unlocked weapons.
 - `pause_menu`: open and close the Pause Menu.
-- `inventory_pick_place`: pick up or place the selected Pause Menu inventory item.
-- `inventory_rotate_item`: rotate the currently Held Item in the Pause Menu inventory.
 
-Keyboard defaults are WASD for directions, Space for jump, U for fire, I for aim, K for next weapon, J for previous weapon, Escape for the Pause Menu, Y for inventory pick/place, and Backspace for inventory item rotation. Gamepad bindings also exist for movement, jump, fire, aim, and weapon cycling.
+Keyboard defaults are WASD for directions, Space for jump, U for fire, I for aim, K for next weapon, J for previous weapon, and Escape for the Pause Menu. Gamepad bindings also exist for movement, jump, fire, aim, weapon cycling, and the Pause Menu.
 
 ## Tests
 
-Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/run_gut_tests.ps1`; set `GODOT_BIN` to the local Godot 4.6 executable when Godot is not on `PATH`.
+Player component tests use GUT 9.6.0 under `test/unit`. Run them with `test/run_gut_tests.ps1`; set `GODOT_BIN` to the local Godot 4.6 executable when Godot is not on `PATH`.
 
 ## Current Gaps
 
@@ -243,7 +229,7 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 - The player scene's Camera node includes two boundary `StaticBody2D` nodes with constrained collision layers and masks to keep the Player from leaving the visible frame.
 - The `Global` autoload defines `player_died`, `mob_died`, `player_level`, and `player_position`, but the inspected runtime code does not fully use all player state fields yet.
 - Temporary `player.tscn*.tmp` files are present in the player folder and should not be treated as canonical scenes.
-- The Pause Menu inventory screen does not yet have mouse drag/drop interaction, stack splitting, pickup integration, or save/load support.
+- There is no inventory display UI, item-use flow, pickup integration, or save/load support.
 
 ## Contributor Notes
 
@@ -252,4 +238,4 @@ Player component tests use GUT 9.6.0 under `test/unit`. Run them with `scripts/r
 - When adding a weapon, create a weapon config resource, add it to the player's weapon inventory config list, provide projectile and HUD assets, and add animation profile handling if the weapon needs a new arm animation set.
 - When adding an enemy, use "Enemy" in documentation and player-facing language, even if it inherits from the current `Mob` class.
 - When changing damage behavior, verify hit box and hurt box flags together; mismatched flags make overlaps look broken even when collision shapes are correct.
-- Future inventory item visuals should use predefined item view scenes attached to `ItemConfig` or selected by it. Keep `ItemConfig` and `InventoryItem` as the gameplay data source of truth, and treat item view scenes as presentation/interaction templates for rendering children such as ColorRects, Labels, icons, and quantity text.
+- Future inventory item visuals should treat `InventoryItemDefinition` and `PlayerInventory` as the gameplay data source of truth. Keep item presentation separate from Item Quantity storage.

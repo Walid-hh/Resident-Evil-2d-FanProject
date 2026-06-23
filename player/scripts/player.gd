@@ -21,7 +21,7 @@ func _ready() -> void:
 	weapon_inventory.unlocked_weapon_configs_changed.connect(player_hud.set_weapon_slots)
 	weapon_inventory.active_weapon_config_changed.connect(player_hud.set_active_weapon_config)
 	health_component.health_changed.connect(player_hud.set_health_values)
-	player_inventory.get_grid_inventory().inventory_changed.connect(_sync_weapon_ammo_counts)
+	player_inventory.inventory_changed.connect(_sync_weapon_ammo_counts)
 	weapon_inventory.initialize()
 	player_animator.attack_animation_finished.connect(_on_attack_animation_finished)
 	health_component.died.connect(_on_died)
@@ -61,7 +61,7 @@ func _physics_process(delta: float) -> void:
 		aim_controller.get_last_horizontal_direction()
 	)
 	if shot_fired:
-		player_animator.start_attack(aim_controller.get_aim_direction())
+		player_animator.start_attack(aim_controller.get_aim_direction(), weapon_inventory.get_last_fired_weapon_config())
 
 	if next_weapon_pressed:
 		weapon_inventory.cycle_next_unlocked_weapon()
